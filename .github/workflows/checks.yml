@@ -23,5 +23,7 @@ jobs:
         run: node tests/motion.cjs
       - name: Validate complete browser rendering and replay transitions
         run: node tests/render.cjs
+      - name: Validate play calls and horizontal projection
+        run: node tests/playbook.cjs
       - name: Validate chiptune scheduling and controls
         run: node tests/music.cjs

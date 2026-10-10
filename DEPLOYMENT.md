@@ -14,6 +14,7 @@ node tests/motion.cjs
 node tests/music.cjs
 node tests/draft.cjs
 node tests/render.cjs
+node tests/playbook.cjs
 npx wrangler@4.149.0 deploy --config wrangler.jsonc
 ```
 

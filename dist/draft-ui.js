@@ -5,6 +5,7 @@
   let saved=null;
   try{saved=JSON.parse(localStorage.getItem(storageKey))}catch{}
   const draft=new Draft(saved);
+  const autoPicked=draft.summary().count<22;if(autoPicked)draft.autoFill();
   let selected=Math.max(0,draft.ids.indexOf(null)),draftSide=slots[selected].side,limit=24,hasMatch=false,undoClear=null;
   const titles={QB:'Quarterback',WR:'Wide receiver',TE:'Tight end',HB:'Halfback',FB:'Fullback',LT:'Left tackle',LG:'Left guard',C:'Center',RG:'Right guard',RT:'Right tackle',DE:'Defensive end',NT:'Nose tackle',OLB:'Outside linebacker',ILB:'Inside linebacker',CB:'Cornerback',S:'Safety'};
   const hints={QB:'Find the arm that leads your offense.',WR:'Speed creates space. Hands finish the play.',TE:'A reliable target who can hold a block.',HB:'Find the vision, burst, and ball security to move the chains.',FB:'Lead the way through contact.',LT:'Protect the pocket from the edge.',LG:'Win the line of scrimmage.',C:'Every play starts with a clean snap.',RG:'Open a lane up the middle.',RT:'Keep your quarterback standing.',DE:'Pressure the pocket. Finish the tackle.',NT:'An anchor at the heart of your defense.',OLB:'Rush, tackle, or drop into coverage.',ILB:'Read the play and shut down the middle.',CB:'Stay with the receiver. Make a play on the ball.',S:'Read the whole field. Be the last line of defense.'};
@@ -30,6 +31,7 @@
     $('draftLaunch').disabled=summary.count!==22;
     $('draftLaunch').innerHTML=summary.count===22?'LOCK LINEUP & KICK OFF <span>→</span>':`FILL ${22-summary.count} MORE POSITION${summary.count===21?'':'S'} <span>→</span>`;
     $('clearDraft').textContent=undoClear?'UNDO CLEAR':'CLEAR LINEUP';
+    $('autoDraft').textContent=summary.count===22?'RE-DRAFT ↻':'AUTO DRAFT ↗';
   }
   function renderMarket(){
     const slot=slots[selected],current=draft.ids[selected]===null?null:player(draft.ids[selected],slot.pos);
@@ -62,8 +64,9 @@
   $('editDraft').onclick=showDraft;$('backToMatch').onclick=showMatch;
   document.querySelectorAll('[data-draft-side]').forEach(button=>button.onclick=()=>{draftSide=button.dataset.draftSide;selected=(slots.find(s=>s.side===draftSide&&draft.ids[s.index]===null)||slots.find(s=>s.side===draftSide)).index;limit=24;render()});
   ['draftSearch','draftType','draftSort'].forEach(id=>$(id).addEventListener(id==='draftSearch'?'input':'change',()=>{limit=24;renderMarket()}));
-  $('autoDraft').onclick=()=>{draft.autoFill();undoClear=null;save();render();announce('Your lineup is complete. Swap any starter, or lock your 22 and kick off.');};
+  $('autoDraft').onclick=()=>{if(draft.summary().count===22){draft.ids=Array(22).fill(null);selected=0;draftSide='offense';$('draftSearch').value='';$('draftType').value='all';}draft.autoFill();undoClear=null;save();render();announce('Your lineup is complete. Swap any starter, or lock your 22 and kick off.');};
   $('clearDraft').onclick=()=>{if(undoClear){draft.ids=undoClear;undoClear=null;announce('Your lineup is restored.')}else{undoClear=draft.ids.slice();draft.ids=Array(22).fill(null);selected=0;draftSide='offense';announce('Lineup cleared. Use Undo Clear to restore it.');}save();render()};
   $('draftLaunch').onclick=()=>{if(draft.summary().count!==22)return;save();const blue=draft.roster(),red=draft.opponent();hasMatch=true;showMatch();window.startDraftedMatch(blue,red);};
   showDraft();
+  if(autoPicked){save();announce('Your offense and defense are auto-picked. Swap any starter, or lock your lineup and kick off.');}else announce('Your saved lineup is ready. Swap any starter, or kick off.');
 })();

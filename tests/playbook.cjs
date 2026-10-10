@@ -1,0 +1,37 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {Match,roster,calls}=require('../dist/sim.js');
+const {PlayMotion,routes}=require('../dist/motion.js');
+const {project}=require('../dist/stadium.js');
+let seed=113;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+const samples={};
+for(const [key,call] of Object.entries(calls)){
+  let yards=0,completions=0;
+  for(let i=0;i<500;i++){
+    const match=new Match(random),e=match.next(key),motion=new PlayMotion(e,roster);
+    assert.equal(e.playCall,key);
+    if(call.kind==='run'){assert.equal(e.type,'run');assert.ok(['HB','FB'].includes(roster.find(p=>p.id===e.target).pos))}
+    else{assert.ok(['pass','sack'].includes(e.type));assert.equal(e.target,key==='action'?34:roster.filter(p=>p.pos==='WR')[key==='deep'?1:0].id);if(key==='action')assert.equal(e.target,34);if(e.complete){yards+=e.gain;completions++}}
+    for(const route of routes(key,20,roster)){assert.ok(roster.some(p=>p.id===route.id));assert.ok(route.points.length>=2);for(const point of route.points)assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y))}
+    for(const t of [0,motion.snap+.2,motion.release+.1,motion.catchAt+.1,motion.contact+.1]){
+      const f=motion.frame(t);assert.equal(f.players.length,22);
+      for(const team of [0,1]){
+        for(const actor of f.players){const p=project(actor.tx,actor.ty,35,team);assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y))}
+        const p=project(f.ball.x,f.ball.y,35,team);assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y));
+      }
+    }
+  }
+  samples[key]={yards:completions?yards/completions:0,completions};
+}
+assert.ok(samples.deep.yards>samples.action.yards&&samples.action.yards>samples.quick.yards,'Passing depth must change actual completed yards');
+assert.ok(samples.quick.completions>samples.deep.completions,'Short passes should complete more often');
+const e=new Match(random).next('quick'),quick=new PlayMotion(e,roster),deep=new PlayMotion({...e,playCall:'deep'},roster),action=new PlayMotion({...e,playCall:'action'},roster);
+assert.ok(quick.release<deep.release&&deep.release<action.release);
+assert.equal(action.frame(action.snap+.2).stage,'PLAY FAKE');
+assert.equal(action.frame(action.snap+.2).players.find(p=>p.p.pos==='QB').pose,'handoff');
+assert.ok(action.frame(action.release).players.find(p=>p.p.pos==='HB').ty>e.start);
+assert.ok(new PlayMotion({...e,type:'run',playCall:'inside'},roster).lane!==new PlayMotion({...e,type:'run',playCall:'outside'},roster).lane);
+for(const team of [0,1]){const a=project(320,20,30,team),b=project(320,30,30,team);assert.equal(a.y,b.y);assert.ok(team===0?b.x>a.x:b.x<a.x)}
+assert.throws(()=>new Match(random).next('unknown'));
+const fourth=new Match(random);fourth.down=4;const special=fourth.next('deep');assert.equal(special.type,'punt');
+console.log(`PASS: five play calls across 2,500 outcomes; distinct pass depth/risk, run lanes, release timing, play fake, route previews, and both horizontal attack directions. Average completed yards: ${['quick','action','deep'].map(k=>k+' '+samples[k].yards.toFixed(1)).join(', ')}.`);
