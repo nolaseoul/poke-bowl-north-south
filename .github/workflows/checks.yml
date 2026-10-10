@@ -17,7 +17,11 @@ jobs:
           node-version: '22'
       - name: Validate match simulation and statistics
         run: node tests/game.cjs
+      - name: Validate drafting and distinct team matchups
+        run: node tests/draft.cjs
       - name: Validate animation frames
         run: node tests/motion.cjs
+      - name: Validate complete browser rendering and replay transitions
+        run: node tests/render.cjs
       - name: Validate chiptune scheduling and controls
         run: node tests/music.cjs
