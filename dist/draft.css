@@ -6,3 +6,4 @@
 @media(prefers-reduced-motion:reduce){.prospect{transition:none}}
 
 @media(max-width:680px){.prospect-filters input,.prospect-filters select{font-size:16px}}
+@media(max-width:380px){header{gap:5px}.brand{font-size:21px;white-space:nowrap}.brand small{font-size:5px;letter-spacing:.6px}.ball{font-size:20px;margin-right:3px}.draft-nav{font-size:7px;padding:8px 4px}.audio-buttons button,#sound{font-size:7px;padding:8px 4px}}
