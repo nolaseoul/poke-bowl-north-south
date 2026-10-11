@@ -15,8 +15,8 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - Every prospect has athletic ratings and different football skills and overall ratings for each position. Search by name or Pokédex number, filter by type, and compare position fit, speed, or strength.
 - Scout both teams, replace individual starters, and undo a cleared lineup.
 - Live box scores track passing, rushing, receiving, defense, and blocking.
-- The side-on pixel stadium includes route previews, ball flight, catches, pursuit, jukes, tackles, and touchdown celebrations. Play choices change passing depth, release timing, completion risk, and rushing lanes.
-- Pocket Stadium Radio has two original Game Boy-style tracks and touchdown fanfares, with separate music and sound-effect controls.
+- The side-on 16-bit stadium includes a packed illustrated grandstand, animated foreground fans and flags, touchdown cheers, sunset floodlights, a live stadium scoreboard, and crisp rendering on high-density screens. It also includes route previews, ball flight, catches, pursuit, jukes, tackles, and touchdown celebrations. Play choices change passing depth, release timing, completion risk, and rushing lanes.
+- Stadium Radio has two original 64-bar arrangements: Route to Victory (Stadium Mix) and Rivalry Night (Neon Mix). Eleven procedural 16-bit PCM instruments supply synth leads, electric keys, brass, pads, bells, bass and a full drum kit, with stereo placement, reverb, dotted-eighth delay and touchdown fanfares. Music and sound effects have separate controls.
 
 Version 1.0 is a local browser simulation against the computer. Friend-versus-friend play is planned for a later version.
 
@@ -41,9 +41,10 @@ node tests/music.cjs
 node tests/draft.cjs
 node tests/render.cjs
 node tests/playbook.cjs
+node tests/stadium.cjs
 ```
 
-The checks cover full-game termination and reconciled box scores across 500 games, animation invariants across thousands of frames, both chiptune arrangements plus audio lifecycle behavior, and 100 additional games with distinct drafted teams. Draft checks cover all 151 species at all 16 positions, saved lineups, duplicate prevention, assigned player animations, and stat reconciliation. The browser rendering loop also runs 12 complete drafted matches across Coach and Auto modes, including highlight replay transitions, waiting without consuming downs, and pause behavior, with a canvas mock that rejects invalid drawing coordinates. Playbook checks exercise 2,500 outcomes, compare actual pass depth and completion risk, and verify route previews and both horizontal attack directions. GitHub Actions runs these checks on pushes and pull requests.
+The checks cover full-game termination and reconciled box scores across 500 games, animation invariants across thousands of frames, both 64-bar stereo arrangements, distinct PCM instruments, bounded instrument caching, output-device sample-rate compatibility, audio lifecycle behavior, and 100 additional games with distinct drafted teams. Draft checks cover all 151 species at all 16 positions, saved lineups, duplicate prevention, assigned player animations, and stat reconciliation. The browser rendering loop also runs 12 complete drafted matches across Coach and Auto modes, including highlight replay transitions, waiting without consuming downs, and pause behavior, with a canvas mock that rejects invalid drawing coordinates. Playbook checks exercise 2,500 outcomes, compare actual pass depth and completion risk, and verify route previews and both horizontal attack directions. GitHub Actions runs these checks on pushes and pull requests.
 
 ## Source
 
@@ -55,7 +56,8 @@ The checks cover full-game termination and reconciled box scores across 500 game
 | `dist/draft-ui.js` | Draft interface and local lineup persistence |
 | `scripts/build-kanto.py` | Regenerate species traits from PokeAPI CSV tables |
 | `dist/motion.js` | Play choreography, route plans, and animation frames |
-| `dist/stadium.js` | Horizontal projection and side-on pixel stadium renderer |
+| `dist/stadium.js` | Horizontal projection, generated grandstand, animated crowd and retina rendering |
+| `docs/stadium-art.md` | Stadium asset provenance and generation prompt |
 | `dist/music.js` | Original procedural Web Audio soundtrack |
 | `dist/game.js` | Canvas rendering, broadcast controls, and interface |
 | `tests/` | Simulation, animation, and music checks |
@@ -65,4 +67,4 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for publishing instructions. The public game 
 
 ## Credits
 
-Created by [James Kuk (@nolaseoul)](https://github.com/nolaseoul). Fan-made football ratings are inspired by Pokémon designs and are not official Pokémon statistics. Species traits are sourced from [PokeAPI data](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv); football projections use fictional formulas. Sprites are sourced from [PokeAPI](https://github.com/PokeAPI/sprites). Pokémon names, characters, and sprites belong to their respective owners. The soundtrack consists of original compositions, with no official game recordings or samples.
+Created by [James Kuk (@nolaseoul)](https://github.com/nolaseoul). Fan-made football ratings are inspired by Pokémon designs and are not official Pokémon statistics. Species traits are sourced from [PokeAPI data](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv); football projections use fictional formulas. Sprites are sourced from [PokeAPI](https://github.com/PokeAPI/sprites). Pokémon names, characters, and sprites belong to their respective owners. The soundtrack consists of original compositions and procedural instruments, with no official game recordings or samples. Stadium grandstand art was generated with ImageGen; see [artwork notes](docs/stadium-art.md).
