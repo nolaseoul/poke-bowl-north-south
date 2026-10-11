@@ -33,3 +33,7 @@ jobs:
         run: node tests/fx.cjs
       - name: Validate all eight-direction character animations
         run: node tests/sprites.cjs
+      - name: Validate account flows and guest exclusion
+        run: node tests/account.cjs
+      - name: Validate server-verified results and persistent standings
+        run: node tests/league.mjs

@@ -8,3 +8,5 @@
 
 body:has(#broadcastScreen:not([hidden])) header{height:82px}.match-heading{padding:20px 0}.match-heading h1{font-size:38px}
 @media(max-width:680px){body:has(#broadcastScreen:not([hidden])) header{height:70px}.match-heading{padding:16px 0 12px}.match-heading h1{font-size:33px}}
+/* A tighter broadcast crop keeps the larger characters readable on phones. */
+@media(max-width:600px){.field-wrap{overflow:hidden}#field{width:135%;max-width:none;margin-left:-17.5%}#banner{padding:12px}#banner h2{margin:9px 0;font-size:32px}#banner p{margin:5px 0;font-size:10px}#banner button{margin:8px;padding:12px 20px}}

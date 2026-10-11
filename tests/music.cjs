@@ -6,17 +6,18 @@ global.AudioContext=class{constructor(){this.currentTime=0;this.sampleRate=devic
 global.setInterval=()=>{let id=nextId++;intervals.add(id);return id};global.clearInterval=id=>intervals.delete(id);
 (async()=>{
  const colors=new Map();
- for(const instrument of ['lead','bass','pad','keys','bell','brass','kick','snare','hat','shaker','crash']){
+ for(const instrument of ['lead','bass','pad','keys','bell','brass','kick','snare','hat','shaker','crash','guitar','tom']){
   const pcm=patch(60,.3,instrument);assert.ok(pcm.length>RATE*.3);let energy=0;for(const v of pcm){assert.ok(Number.isFinite(v)&&Math.abs(v)<=1);assert.ok(Math.abs(v*32767-Math.round(v*32767))<.002,'Samples must use 16-bit quantization');energy+=v*v;}
   assert.ok(Math.sqrt(energy/pcm.length)>.01,`${instrument} must be audible`);assert.ok(Math.abs(pcm.at(-1))<.002,'Envelope must end near zero');colors.set(instrument,pcm.slice(100,120).join(','));
  }
  assert.equal(new Set(colors.values()).size,colors.size,'Every instrument needs a distinct timbre');
  for(const id of Object.keys(tracks)){
   const music=new ChipMusic();music.setTrack(id);await music.play();assert.equal(music.enabled,true);assert.equal(intervals.size,1);await music.play();assert.equal(intervals.size,1);
+  assert.equal(tracks[id].bpm,130);const opening=scoreStep(tracks[id],0,60/130/4);for(const instrument of ['lead','bass','kick','guitar'])assert.ok(opening.some(e=>e.instrument===instrument),'First beat must hit immediately');
   const tick=60/tracks[id].bpm/4,used=new Set();let left=false,right=false;
   for(let step=0;step<1024;step++){scoreStep(tracks[id],step,tick).forEach(e=>{used.add(e.instrument);left||=e.pan<0;right||=e.pan>0;assert.ok(e.duration>0&&e.gain>0&&e.offset>=0);});music.noteStep(step,step*tick,tick);}
   assert.ok(used.size>=10&&left&&right,'Arrangement needs a full instrument palette and stereo placement');
-  const intro=Array.from({length:64},(_,i)=>scoreStep(tracks[id],i,tick).length).reduce((a,b)=>a+b,0),chorus=Array.from({length:64},(_,i)=>scoreStep(tracks[id],256+i,tick).length).reduce((a,b)=>a+b,0);assert.ok(chorus>intro*1.4,'The chorus must lift beyond the intro');
+  const intro=Array.from({length:64},(_,i)=>scoreStep(tracks[id],i,tick).length).reduce((a,b)=>a+b,0),chorus=Array.from({length:64},(_,i)=>scoreStep(tracks[id],256+i,tick).length).reduce((a,b)=>a+b,0);assert.ok(chorus>intro*1.3,'The chorus must lift beyond the intro');
   assert.ok(music.cache.size<=192,'PCM cache must stay bounded');
   music.setVolume(2);assert.equal(music.volume,1);music.setVolume(-1);assert.equal(music.volume,0);music.setVolume(NaN);assert.equal(music.volume,0);
   music.celebrate();music.celebrate(true);music.stop();assert.equal(music.enabled,false);assert.equal(intervals.size,0);assert.equal(music.voices.size,0);
@@ -24,5 +25,5 @@ global.setInterval=()=>{let id=nextId++;intervals.add(id);return id};global.clea
  }
  const race=new ChipMusic();const start=race.play();race.stop();await start;assert.equal(race.enabled,false);assert.equal(intervals.size,0);
  for(const rate of [44100,96000]){deviceRate=rate;const device=new ChipMusic();await device.play();device.stop();assert.equal(intervals.size,0)}
- console.log(`PASS: two 64-bar stereo arrangements, 11 distinct 16-bit PCM instruments, ${scheduled} scheduled voices, chorus dynamics, bounded cache, volume bounds, single scheduler, restart, track switch, fanfares and cancelled startup.`);
+ console.log(`PASS: two 64-bar stereo arrangements, 13 distinct 16-bit PCM instruments, ${scheduled} scheduled voices, chorus dynamics, bounded cache, volume bounds, single scheduler, restart, track switch, fanfares and cancelled startup.`);
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -1,0 +1,4 @@
+# Public Auth client configuration only. Never use a service-role/secret key.
+SUPABASE_URL=""
+SUPABASE_PUBLISHABLE_KEY=""
+GOOGLE_ENABLED="false"

@@ -66,7 +66,7 @@
   ['draftSearch','draftType','draftSort'].forEach(id=>$(id).addEventListener(id==='draftSearch'?'input':'change',()=>{limit=24;renderMarket()}));
   $('autoDraft').onclick=()=>{if(draft.summary().count===22){draft.ids=Array(22).fill(null);selected=0;draftSide='offense';$('draftSearch').value='';$('draftType').value='all';}draft.autoFill();undoClear=null;save();render();announce('Your lineup is complete. Swap any starter, or lock your 22 and kick off.');};
   $('clearDraft').onclick=()=>{if(undoClear){draft.ids=undoClear;undoClear=null;announce('Your lineup is restored.')}else{undoClear=draft.ids.slice();draft.ids=Array(22).fill(null);selected=0;draftSide='offense';announce('Lineup cleared. Use Undo Clear to restore it.');}save();render()};
-  $('draftLaunch').onclick=()=>{if(draft.summary().count!==22)return;save();const blue=draft.roster(),red=draft.opponent();hasMatch=true;showMatch();window.startDraftedMatch(blue,red);};
+  $('draftLaunch').onclick=async()=>{if(draft.summary().count!==22)return;save();$('draftLaunch').disabled=true;announce('Preparing your matchup…');const started=await window.startDraftedMatch(draft.roster(),draft.opponent());if(started){hasMatch=true;showMatch()}renderSummary();};
   showDraft();
   if(autoPicked){save();announce('Your offense and defense are auto-picked. Swap any starter, or lock your lineup and kick off.');}else announce('Your saved lineup is ready. Swap any starter, or kick off.');
 })();
