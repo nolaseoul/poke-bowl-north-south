@@ -1,11 +1,12 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c19"><title>Poké Bowl — Pokémon Football</title>
-<meta name="description" content="Draft your Pokémon dream team, call the plays, and watch the highlights. Play the computer or challenge a friend — free in your browser.">
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c19"><title>Poké Bowl | Free Pokémon Football Browser Game</title>
+<meta name="description" content="Play Poké Bowl, a free Pokémon football game in your browser. Draft 22 Kanto Pokémon, call plays, and face the computer or a friend on PC and mobile.">
 <link rel="canonical" href="https://www.pokeball.gg/">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Poké Bowl">
 <meta property="og:locale" content="en_US">
 <meta property="og:title" content="Poké Bowl — Your call. Their highlight.">
-<meta property="og:description" content="Draft your Pokémon dream team, call the plays, and watch the highlights. Play the computer or challenge a friend — free in your browser.">
+<meta property="og:description" content="Play Poké Bowl, a free Pokémon football game in your browser. Draft 22 Kanto Pokémon, call plays, and face the computer or a friend on PC and mobile.">
 <meta property="og:url" content="https://www.pokeball.gg/">
 <meta property="og:image" content="https://www.pokeball.gg/assets/social/pokebowl-cover-v1.jpg">
 <meta property="og:image:secure_url" content="https://www.pokeball.gg/assets/social/pokebowl-cover-v1.jpg">
@@ -15,9 +16,49 @@
 <meta property="og:image:alt" content="Poké Bowl pixel-art football stadium: Blastoise throws, Pikachu sprints, and Charizard leaps for a pass under the floodlights.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Poké Bowl — Your call. Their highlight.">
-<meta name="twitter:description" content="Draft your Pokémon dream team, call the plays, and watch the highlights. Play the computer or challenge a friend — free in your browser.">
+<meta name="twitter:description" content="Play Poké Bowl, a free Pokémon football game in your browser. Draft 22 Kanto Pokémon, call plays, and face the computer or a friend on PC and mobile.">
 <meta name="twitter:image" content="https://www.pokeball.gg/assets/social/pokebowl-cover-v1.jpg">
 <meta name="twitter:image:alt" content="Poké Bowl pixel-art football stadium: Blastoise throws, Pikachu sprints, and Charizard leaps for a pass under the floodlights.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.pokeball.gg/#website",
+      "url": "https://www.pokeball.gg/",
+      "name": "Poké Bowl",
+      "alternateName": [
+        "Poke Bowl",
+        "Pokeball.gg"
+      ],
+      "inLanguage": "en"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://www.pokeball.gg/#game",
+      "name": "Poké Bowl",
+      "url": "https://www.pokeball.gg/",
+      "description": "Play Poké Bowl, a free Pokémon football game in your browser. Draft 22 Kanto Pokémon, call plays, and face the computer or a friend on PC and mobile.",
+      "applicationCategory": "GameApplication",
+      "applicationSubCategory": "Football simulation",
+      "operatingSystem": "Any operating system with a modern web browser",
+      "browserRequirements": "Requires JavaScript and a modern desktop or mobile browser.",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "image": "https://www.pokeball.gg/assets/social/pokebowl-cover-v1.jpg",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "isPartOf": {
+        "@id": "https://www.pokeball.gg/#website"
+      }
+    }
+  ]
+}
+</script>
 <link rel="icon" type="image/png" href="assets/25.png">
 <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="draft.css"><link rel="stylesheet" href="broadcast.css"><link rel="stylesheet" href="account.css"><link rel="stylesheet" href="welcome.css"><link rel="stylesheet" href="team-picker.css"></head><body><script>window.PokeWelcome={active:!location.hash&&!new URLSearchParams(location.search).has('code')};</script><section id="welcomeScreen" class="welcome-screen" aria-labelledby="welcomeTitle"><div class="welcome-stadium" aria-hidden="true"><div class="welcome-turf"></div></div><div class="welcome-vignette" aria-hidden="true"></div><div class="welcome-topline"><b>◒ POKEBALL.GG</b><span>STADIUM EDITION / 02</span></div><div class="welcome-hero left" aria-hidden="true"><img src="assets/portraits/9.png" alt="" width="475" height="475"><span class="welcome-player">BLASTOISE<small>QB · HYDRO CANNON</small></span></div><div class="welcome-hero right" aria-hidden="true"><img src="assets/portraits/6.png" alt="" width="475" height="475"><span class="welcome-player">CHARIZARD<small>WR · INFERNO WING</small></span></div><div class="welcome-content"><p class="welcome-kicker">WELCOME TO THE BIG LEAGUE</p><h1 id="welcomeTitle" class="welcome-title">POKÉ<span>BOWL</span></h1><p class="welcome-tagline">YOUR CALL. THEIR HIGHLIGHT.</p><nav class="welcome-menu" aria-label="Main menu"><button id="welcomePlay">PLAY NOW</button><button id="welcomeDraft">BUILD MY TEAM</button><button id="welcomeFriends">PLAY A FRIEND</button><button id="welcomeLeague">WORLD LEADERBOARD</button></nav><div class="welcome-options"><button id="welcomeHow" aria-expanded="false" aria-controls="welcomeHelp">HOW TO PLAY</button><button id="welcomeMusic" aria-pressed="false">♫ MUSIC OFF</button></div><div id="welcomeHelp" class="welcome-how" hidden><strong>1. Build your 22.</strong> Your first lineup is auto-picked. Swap starters and name your team.<br><strong>2. Call the play.</strong> Choose offense or a defensive counter. Every Pokémon has one signature ultimate per set of downs.<br><strong>3. Watch it unfold.</strong> The action is simulated. Turn on Auto to enjoy the whole broadcast.</div></div><footer class="welcome-bottom"><div class="welcome-badges"><span>151 POKÉMON</span><span>11 vs 11</span><span>YOU COACH · THEY PLAY</span></div><div class="welcome-footerline"></div><p>Unofficial fan game. Pokémon characters and artwork belong to their respective owners.<br>Not affiliated with Nintendo, Game Freak or The Pokémon Company. <a href="sprite-credits.html">Art & animation credits</a></p></footer></section><main><header><a class="brand" href="./"><span class="ball">◒</span> POKÉ<span>BOWL</span><small>FOOTBALL SIMULATOR / VOL. 01</small></a><div class="live"><i></i> COACH MODE <span>1.0</span></div><button id="editDraft" class="draft-nav">DRAFT TEAM</button><div class="audio-buttons"><button id="music" aria-label="Toggle stadium music" aria-pressed="false">♫ MUSIC OFF</button><button id="sound" aria-label="Toggle game sound effects" aria-pressed="true">FX ON</button></div><nav class="account-nav" aria-label="Player account"><button id="leaderboardNav">♜ LEADERBOARD</button><button id="accountNav">SIGN IN</button></nav></header><div id="profileStatus" role="status">GUEST MODE · Results aren’t saved</div>
 <p id="duelStatus" class="duel-status" hidden role="status" aria-live="polite"></p>

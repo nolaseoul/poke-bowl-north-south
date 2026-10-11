@@ -14,6 +14,7 @@ A new browser automatically gets **22 unique starters from the 151 Kanto species
 
 Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams calling offense and defensive counters. Select 1×, 2×, or 4× broadcast speed, or pause the match. Kanto Blue attacks right and Rocket Red attacks left; possession changes turn the horizontal field around. Phones support portrait and landscape, with a horizontally scrolling playbook.
 
+- Google Search Console uses the verified `pokeball.gg` Domain property. Public pages include search titles, descriptions, canonicals and a sitemap; see [search setup and maintenance](docs/search.md).
 - Basic visits and page views are tracked with Cloudflare Web Analytics. The private dashboard includes countries, referrers, devices and page performance; see [analytics access and setup](docs/analytics.md).
 - Game, roster and friend-invite links include a dedicated pixel-art stadium cover with Open Graph and X large-image metadata. See [share preview and artwork notes](docs/share-preview.md).
 - Name your team on the draft screen (up to 24 characters). The name is remembered on this device and appears in the scoreboard, playbook, feed, score celebrations and final result. A rename applies at the next kickoff.
