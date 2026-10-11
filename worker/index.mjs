@@ -1,4 +1,6 @@
 import league from '../dist/league.js';
+import {routeRoom} from './pvp.mjs';
+export {PvPRoom} from './pvp.mjs';
 const {countries,teams,replay}=league;
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 const fail=(message,status=400)=>{throw Object.assign(Error(message),{status})};
@@ -30,6 +32,7 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
   if(!['GET','POST','PATCH'].includes(method))fail('Method not allowed.',405);
   if(method!=='GET'&&request.headers.get('origin')&&request.headers.get('origin')!==url.origin)fail('Invalid request origin.',403);
   if(path==='/api/config'&&method==='GET')return json({url:env.SUPABASE_URL||null,key:env.SUPABASE_PUBLISHABLE_KEY||null,google:env.GOOGLE_ENABLED==='true'});
+  if(path==='/api/rooms'||path.startsWith('/api/rooms/'))return await routeRoom(request,env,body);
   if(!env.LEAGUE)fail('Leaderboard is temporarily unavailable.',503);
   if(path==='/api/leaderboard'&&method==='GET'){
    const country=url.searchParams.get('country');if(country&&!countries.includes(country))fail('Choose a valid country.');

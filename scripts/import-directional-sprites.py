@@ -52,7 +52,14 @@ def species(number):
             top, bottom = min(b[1] for b in bounds), max(b[3] for b in bounds)
             file = f'{number}-{name.lower()}.png'
             (DEST / file).write_bytes(png)
-            loaded[name] = {'src': 'assets/directional/' + file, 'w': w, 'h': h, 'ticks': dur, 'baseline': bottom, 'span': max(right-left, bottom-top)}
+            anchors = []
+            for row in range(8):
+                poses = []
+                for col in range(len(dur)):
+                    box = image.crop((col*w, row*h, (col+1)*w, (row+1)*h)).getbbox()
+                    poses.append([(box[0]+box[2])/2, box[3]] if box else [w/2, bottom])
+                anchors.append(poses)
+            loaded[name] = {'anchors': anchors, 'src': 'assets/directional/' + file, 'w': w, 'h': h, 'ticks': dur, 'baseline': bottom, 'span': max(right-left, bottom-top)}
         states[state] = loaded[name]
     credits = fetch(folder + '/credits.txt').decode()
     (DEST / f'{number}-credits.txt').write_text(credits)

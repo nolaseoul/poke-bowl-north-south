@@ -16,5 +16,21 @@
       "database_id": "9ddd893d-f62a-40b3-a13e-b8a9735607b9"
     }
   ],
-  "main": "worker/index.mjs"
+  "main": "worker/index.mjs",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PVP",
+        "class_name": "PvPRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "pvp-v1",
+      "new_sqlite_classes": [
+        "PvPRoom"
+      ]
+    }
+  ]
 }

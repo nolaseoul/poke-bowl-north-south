@@ -7,6 +7,7 @@ for(let id=1;id<=151;id++){
  const points=[];for(let t=0;t<=4.8;t+=.06){const p=Dances.sample(id,t);assert.ok(Object.values(p).filter(v=>typeof v==='number').every(Number.isFinite));assert.ok(p.sx>.7&&p.sy>.7);assert.ok(p.facing>=0&&p.facing<8);assert.ok(p.lift>=0&&p.lift<32);assert.ok(Math.abs(p.x)<45);points.push(p);}
  trajectories.add(JSON.stringify(points));assert.deepEqual(Dances.sample(id,1.5),Dances.sample(id,1.5));assert.deepEqual(Dances.sample(id,0,false),Dances.sample(id,4.8,false));
 }
+for(const style of Object.keys(Dances.programs)){assert.equal(Dances.programs[style].length,16);const id=Dances.catalog.find(d=>d.style===style).id;assert.equal(Dances.sample(id,.1).stage,'windup');assert.equal(Dances.sample(id,1).stage,'dance');assert.equal(Dances.sample(id,4.6).stage,'finish');assert.deepEqual({...Dances.sample(id,4.6),time:0,accent:0},{...Dances.sample(id,4.8),time:0,accent:0},'Finish holds a strong pose');assert.ok(new Set(Dances.programs[style].map(p=>p.frame)).size>3,'Native limb poses must change on accents')}
 assert.equal(trajectories.size,151,'Every species must have distinct stable choreography');
 assert.equal(Dances.signature(143).name,'Belly Bounce');assert.equal(Dances.signature(129).name,'Victory Flop');assert.throws(()=>Dances.signature(152));
 // Capture the actual actor sent to SpriteBank: big screen and field must share the beat.

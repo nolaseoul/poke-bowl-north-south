@@ -23,14 +23,17 @@ for(let seed=1;seed<=12;seed++){
   const math=Object.create(Math);math.random=random;
   class ChipMusic{constructor(){this.volume=.35;this.track='route';this.enabled=false}setVolume(v){this.volume=v}setTrack(v){this.track=v}play(){this.enabled=true;return Promise.resolve()}stop(){this.enabled=false}celebrate(){}}
   class FieldFX{preload(){}setEnabled(v){this.enabled=v}prepare(){return Promise.resolve()}stop(){}play(kind){if(this.enabled)heard.add(kind)}}
-  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
+  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeTeamName:require('../dist/team-name.js'),PokePvP:require('../dist/pvp-client.js'),PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
   vm.createContext(sandbox);
   sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
   for(const file of ['sprite-data','sprites','stadium'])vm.runInContext(fs.readFileSync(require.resolve('../dist/'+file+'.js'),'utf8'),sandbox);
   sandbox.PokeStadium=sandbox.window.PokeStadium;
   vm.runInContext(fs.readFileSync(require.resolve('../dist/game.js'),'utf8'),sandbox);
   const draft=new PokeDraft.Draft();draft.autoFill(random);
-  sandbox.window.startDraftedMatch(draft.roster(),draft.opponent(random));
+  sandbox.window.startDraftedMatch(draft.roster(),draft.opponent(random),seed===1?'✨ <img src=x> & FC':'Thunder FC');
+  assert.equal(element('homeTeamName').textContent,seed===1?'✨ <IMG SRC=X> & FC':'THUNDER FC');
+  assert.ok(!element('matchupSummary').innerHTML.includes('<IMG'));
+  assert.equal(vm.runInContext('match.names[0]',sandbox),seed===1?'✨ <img src=x> & FC':'Thunder FC');
   speedButtons[2].onclick();
   assert.equal(vm.runInContext('waiting',sandbox),true);
   assert.equal(vm.runInContext('match.plays',sandbox),0);
@@ -74,8 +77,19 @@ for(let seed=1;seed<=12;seed++){
    for(let i=0;i<500&&vm.runInContext('running',sandbox);i++)vm.runInContext('update(.06)',sandbox);
    assert.equal(vm.runInContext('running',sandbox),false);assert.equal(element('scoreMoment').hidden,true);
   }
+  if(seed===1)for(const auto of [false,true])for(const pause of [false,true])for(const final of [false,true]){
+   sandbox.skipAuto=auto;sandbox.skipPause=pause;sandbox.skipFinal=final;
+   vm.runInContext(`clearMoment();match=new Match(()=>.5,{teams:squads,names:teamNames});event=match.next('deep','gap');motion=new PokeMotion.PlayMotion(event,[...squads[0].filter(p=>p.side==='offense'),...squads[1].filter(p=>p.side==='defense')]);replaying=true;replayed=true;running=true;waiting=false;paused=skipPause;coaching=!skipAuto;phase=.5;match.over=skipFinal;`,sandbox);
+   const plays=vm.runInContext('match.plays',sandbox),stats=vm.runInContext('JSON.stringify(match.stats)',sandbox),score=vm.runInContext('JSON.stringify(match.score)',sandbox);
+   element('skipReplay').hidden=false;element('skipReplay').onclick();
+   assert.equal(element('skipReplay').hidden,true);assert.equal(vm.runInContext('replaying',sandbox),false);assert.equal(vm.runInContext('paused',sandbox),pause);
+   if(final||!auto){assert.equal(vm.runInContext('match.plays',sandbox),plays);assert.equal(vm.runInContext('JSON.stringify(match.stats)',sandbox),stats);assert.equal(vm.runInContext('JSON.stringify(match.score)',sandbox),score)}else assert.equal(vm.runInContext('match.plays',sandbox),plays+1);
+   if(final)assert.equal(vm.runInContext('running',sandbox),false);else if(!auto)assert.equal(vm.runInContext('waiting',sandbox),true);
+   const now=vm.runInContext('match.plays',sandbox);element('skipReplay').onclick();assert.equal(vm.runInContext('match.plays',sandbox),now,'Repeated skip must not consume another down');
+  }
+
 }
-for(const kind of ['ready','set','hike','snap','throw','catch','hit','kick','cheer','whistle','ultimate'])assert.ok(heard.has(kind),`Full games must trigger ${kind} effects`);
+for(const kind of ['ready','set','hut','hike','snap','throw','catch','hit','kick','cheer','whistle','ultimate'])assert.ok(heard.has(kind),`Full games must trigger ${kind} effects`);
 assert.ok(celebrationCount>0&&heldFrames>0);assert.ok(counterCount>0&&defenseWaits>0);
 assert.ok(replayCount>0,'The renderer test must exercise highlight transitions');
 console.log(`PASS: 12 complete drafted games in Coach and Auto modes through the horizontal rendering loop, ${counterCount} ultimate counter holds and ${defenseWaits} defensive coaching calls, ${celebrationCount} real-time score celebrations, TD/FG/safety final-play and reduced-effects holds, ${replayCount} highlight replays and ${ellipseCount} finite, non-negative canvas ellipses.`);

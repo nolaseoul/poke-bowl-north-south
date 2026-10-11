@@ -12,10 +12,11 @@ class Stadium{
  dancer(ctx,player,size,s){
   const move=dances.sample(player.p.id,player.danceTime??s.celebration.elapsed,s.fullEffects);
   ctx.save();ctx.translate(move.x,-move.lift);ctx.rotate(move.rotation);ctx.scale(move.sx,move.sy);
-  const actor={...player,pose:move.pose,move:move.pose==='run'?1:0,jump:0,stride:move.time*10,danceFacing:move.facing,danceTime:move.time},image=this.images[player.p.id];
+  const actor={...player,pose:move.pose,move:move.pose==='run'?1:0,jump:0,stride:move.time*10,danceFacing:move.facing,danceTime:move.time,actionFrame:move.actionFrame},image=this.images[player.p.id];
   ctx.imageSmoothingEnabled=false;
   if(!this.sprites?.draw(ctx,actor,size,move.time,s.motion,s.event,s.phase,s.fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);
   ctx.restore();
+  if(s.fullEffects&&move.accent>0){ctx.save();ctx.translate(move.x,-move.lift);ctx.strokeStyle=dances.signature(player.p.id).color;ctx.globalAlpha=move.accent*.8;ctx.lineWidth=2;const top=-size*.86;ctx.beginPath();ctx.moveTo(-13,top+1);ctx.lineTo(-17,top-12);ctx.lineTo(-5,top-6);ctx.lineTo(0,top-19);ctx.lineTo(5,top-6);ctx.lineTo(17,top-12);ctx.lineTo(13,top+1);ctx.closePath();ctx.stroke();ctx.restore();}
  }
  victoryScreen(s){
   const c=s.celebration,player=s.frame.players.find(p=>p.team===c.team&&p.p.id===c.scorer);if(!player)return;
@@ -45,7 +46,7 @@ class Stadium{
   // Cloth strips ripple with the stadium breeze, even while awaiting a play call.
   [69,219,365,757,900,1050].forEach((x,i)=>{const y=209+(i%2)*13;ctx.fillStyle='#d6d8c8';ctx.fillRect(x,y-33,2,44);for(let strip=0;strip<8;strip++){const lift=Math.sin(t*4+i+strip*.55)*3;ctx.fillStyle=strip%3===1?'#e9e9cb':i<3?'#4597df':'#ee7169';ctx.fillRect(x+2+strip*4,y-32+lift,4,17);}});
   if(s.fullEffects&&!s.paused)for(let i=0;i<9;i++){if(Math.sin(t*2.3+i*21.7)>.995){const x=52+(i*137)%1050,y=98+(i%3)*44;ctx.fillStyle='#fff4d0';ctx.fillRect(x-3,y,7,2);ctx.fillRect(x,y-3,2,7);}}
-  ctx.fillStyle='#0b1828';ctx.fillRect(452,25,213,38);ctx.strokeStyle='#55738c';ctx.lineWidth=1;ctx.strokeRect(452,25,213,38);ctx.textAlign='center';ctx.font='bold 9px monospace';ctx.fillStyle='#b5d1e8';ctx.fillText('P O K É  S T A D I U M',560,37);ctx.font='bold 15px monospace';const score=s.event&&s.phase<s.motion.resolveAt?(s.event.scoreBefore??s.score):s.score;ctx.fillStyle='#d0f3e7';ctx.fillText(score?`BLUE ${String(score[0]).padStart(2,'0')} : ${String(score[1]).padStart(2,'0')} RED`:'KANTO LEAGUE',560,55);
+  ctx.fillStyle='#0b1828';ctx.fillRect(452,25,213,38);ctx.strokeStyle='#55738c';ctx.lineWidth=1;ctx.strokeRect(452,25,213,38);ctx.textAlign='center';ctx.font='bold 9px monospace';ctx.fillStyle='#b5d1e8';ctx.fillText('P O K É  S T A D I U M',560,37);ctx.font='bold 15px monospace';const score=s.event&&s.phase<s.motion.resolveAt?(s.event.scoreBefore??s.score):s.score;ctx.fillStyle='#d0f3e7';ctx.font='bold 10px monospace';ctx.fillText(score?`${(s.names?.[0]||'Kanto Blue').toUpperCase()} ${String(score[0]).padStart(2,'0')} : ${String(score[1]).padStart(2,'0')} ${(s.names?.[1]||'Rocket Red').toUpperCase()}`:'KANTO LEAGUE',560,55,199);
   if(s.celebration)this.victoryScreen(s);
   ctx.fillStyle='#162c39';ctx.fillRect(0,260,1120,13);ctx.fillStyle='#92bdc4';ctx.fillRect(0,268,1120,2);
   // Team benches and the near camera rail give the field a foreground layer.
@@ -91,6 +92,8 @@ class Stadium{
     ctx.save();ctx.translate(p.x,p.y-bob-(fullEffects?player.jump:0));const rock=fullEffects&&player.move?Math.sin(player.stride)*.065:0;ctx.rotate(rock+player.lean+down*(player.pose==='dive'||player.pose==='miss'?-.5:1)*Math.PI/2);if(fullEffects&&player.pose==='throw')ctx.rotate(team===0?-.18:.18);if(fullEffects&&player.pose==='celebrate')ctx.rotate(Math.sin(elapsed*9)*.12);const image=this.images[player.p.id];ctx.imageSmoothingEnabled=false;if(player.pose==='dance')this.dancer(ctx,player,size,s);else if(!this.sprites?.draw(ctx,player,size,s.ambientTime??elapsed,motion,event,phase,fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);ctx.restore();
     if(player.carrier||player.p.id===event?.defender||waiting&&player.p.pos==='QB'){const text=player.p.name.toUpperCase();ctx.font='bold 10px monospace';ctx.textAlign='center';const width=ctx.measureText(text).width+8;ctx.fillStyle='#122a20ee';ctx.fillRect(p.x-width/2,p.y-size-10-(fullEffects?player.jump:0)-bob,width,16);ctx.fillStyle=player.carrier?'#efeea6':'#f5c8b3';ctx.fillText(text,p.x,p.y-size-(fullEffects?player.jump:0)-bob)}
   });
+  // Paired bodies share a contact point; short shoulder impacts and cleat dust show the struggle.
+  if(fullEffects)for(const contact of frame.engagements||[]){const p=P(contact.x,contact.y),beat=Math.sin((phase-motion.snap)*18+contact.ids[0]);ctx.save();ctx.strokeStyle='#fff0b6';ctx.lineWidth=2;ctx.globalAlpha=contact.stage==='engage'?.8:Math.max(0,beat)*.45;ctx.beginPath();for(const sign of [-1,1]){ctx.moveTo(p.x+sign*4,p.y-29);ctx.lineTo(p.x+sign*10,p.y-36);ctx.moveTo(p.x+sign*6,p.y-25);ctx.lineTo(p.x+sign*15,p.y-24)}ctx.stroke();ctx.globalAlpha=.5;ctx.fillStyle='#c1bf8f';for(let n=0;n<3;n++){const v=((phase*4+n/3+contact.ids[0]*.1)%1);ctx.fillRect(p.x-12+v*24,p.y+5-v*6,4-v*2,2)}ctx.restore();}
   // The selected defender's own elemental ultimate travels to the quarterback.
   if(event?.counter&&phase>=motion.ultimateAt&&phase<motion.resolveAt+.65){
    const attacker=frame.players.find(p=>p.p.id===event.defender&&p.team!==event.team),victim=frame.players.find(p=>p.p.id===event.qb&&p.team===event.team),u=event.ultimates[0];

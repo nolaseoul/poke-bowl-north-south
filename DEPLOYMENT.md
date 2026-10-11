@@ -3,6 +3,7 @@
 Public game: https://poke-bowl-north-south.freshcut-revival.workers.dev/
 
 Cloudflare project: `poke-bowl-north-south` (Worker + Static Assets).
+Private PvP rooms: SQLite Durable Object `PvPRoom`, binding `PVP` (12-hour expiry).
 D1 database: `poke-bowl-league`, binding `LEAGUE`.
 The browser game is in `dist/`; the API is in `worker/index.mjs`.
 No login is required to play as a guest. Guest results are not saved.
@@ -43,6 +44,9 @@ node tests/fx.cjs
 node tests/sprites.cjs
 node tests/account.cjs
 node tests/league.mjs
+node tests/team-links.cjs
+node tests/blocking.cjs
+node tests/pvp.mjs
 npx wrangler@4.149.0 d1 migrations apply LEAGUE --remote
 npx wrangler@4.149.0 deploy --config wrangler.jsonc
 ```
@@ -62,6 +66,8 @@ Public API checks after publishing:
 - `/api/config`: returns publishable configuration, never private credentials
 - `/api/leaderboard`: real standings, initially an empty `players` list
 - `/api/profile`: rejects a request without a valid signed-in session
+- Friend duel: create invite, join in a second browser, lock both hidden calls, verify mirrored scores, refresh/rejoin and independent replay skipping
+- Team sharing: Unicode name and all 22 ordered starters survive a shared-link import
 - New guest: country selection, kickoff, full game, explicit unsaved-result notice
 - Configured Auth: email confirmation/login, Google return, profile restore,
   completed-match saving, second-device record and leaderboard

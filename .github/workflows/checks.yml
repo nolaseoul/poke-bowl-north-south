@@ -43,3 +43,9 @@ jobs:
         run: node tests/account.cjs
       - name: Validate server-verified results and persistent standings
         run: node tests/league.mjs
+      - name: Validate team names and roster share links
+        run: node tests/team-links.cjs
+      - name: Validate paired line blocking and defender releases
+        run: node tests/blocking.cjs
+      - name: Validate private two-coach PvP matches and durable rooms
+        run: node tests/pvp.mjs
