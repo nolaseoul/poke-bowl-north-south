@@ -1,6 +1,15 @@
 # Cloudflare deployment
 
-Public game: https://poke-bowl-north-south.freshcut-revival.workers.dev/
+Custom game addresses: https://www.pokeball.gg/ and https://pokeball.gg/
+
+Fallback: https://poke-bowl-north-south.freshcut-revival.workers.dev/
+
+Domain registration stays at Namecheap. Authoritative DNS uses Cloudflare:
+`lindsey.ns.cloudflare.com` and `tim.ns.cloudflare.com`. Both hostnames are
+Worker custom domains declared in `wrangler.jsonc`; keep them on future deploys.
+The zone uses the Free plan. Nameservers were saved on October 11, 2026;
+initial DNS propagation and HTTPS activation must finish before the custom
+addresses are reachable.
 
 Cloudflare project: `poke-bowl-north-south` (Worker + Static Assets).
 Private PvP rooms: SQLite Durable Object `PvPRoom`, binding `PVP` (12-hour expiry).

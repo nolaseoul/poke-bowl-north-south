@@ -32,5 +32,15 @@
         "PvPRoom"
       ]
     }
+  ],
+  "routes": [
+    {
+      "pattern": "pokeball.gg",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.pokeball.gg",
+      "custom_domain": true
+    }
   ]
 }
