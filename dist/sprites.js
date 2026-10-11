@@ -4,7 +4,7 @@
 const directions=['S','SW','W','NW','N','NE','E','SE'];
 function direction(dx,dy,fallback=6){if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.hypot(dx,dy)<.035)return fallback;return[6,7,0,1,2,3,4,5][(Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8];}
 function cell(meta,t,once=false){const ticks=meta.ticks,total=ticks.reduce((a,b)=>a+b,0);let phase=once?Math.max(0,Math.min(total-1,t*60)):((t*60)%total+total)%total;for(let i=0;i<ticks.length;i++){if(phase<ticks[i])return i;phase-=ticks[i]}return ticks.length-1;}
-function pose(player){return['down','dive','miss'].includes(player.pose)?'hurt':['throw','kick','handoff','block','catch'].includes(player.pose)||player.jump>0?'action':player.move?'run':'idle';}
+function pose(player){return['down','dive','miss'].includes(player.pose)?'hurt':['throw','kick','handoff','block','catch','celebrate'].includes(player.pose)||player.jump>0?'action':player.move?'run':'idle';}
 class SpriteBank{
  constructor(data=root.PokeSpriteData){this.data=data||{};this.images=new Map();this.preloaded=new Set();this.facing=new Map();this.motion=null;}
  preload(players){if(!root.Image)return;for(const p of players){if(this.preloaded.has(p.id))continue;const entry=this.data[p.id];if(!entry)continue;this.preloaded.add(p.id);for(const meta of Object.values(entry.states)){if(this.images.has(meta.src))continue;const image=new root.Image();image.src=meta.src;this.images.set(meta.src,image);}}}
