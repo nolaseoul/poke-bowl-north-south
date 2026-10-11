@@ -23,9 +23,9 @@ for(let seed=1;seed<=12;seed++){
   const math=Object.create(Math);math.random=random;
   class ChipMusic{constructor(){this.volume=.35;this.track='route';this.enabled=false}setVolume(v){this.volume=v}setTrack(v){this.track=v}play(){this.enabled=true;return Promise.resolve()}stop(){this.enabled=false}celebrate(){}}
   class FieldFX{preload(){}setEnabled(v){this.enabled=v}prepare(){return Promise.resolve()}stop(){}play(kind){if(this.enabled)heard.add(kind)}}
-  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
+  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
   vm.createContext(sandbox);
-  sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;
+  sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
   for(const file of ['sprite-data','sprites','stadium'])vm.runInContext(fs.readFileSync(require.resolve('../dist/'+file+'.js'),'utf8'),sandbox);
   sandbox.PokeStadium=sandbox.window.PokeStadium;
   vm.runInContext(fs.readFileSync(require.resolve('../dist/game.js'),'utf8'),sandbox);
@@ -49,7 +49,7 @@ for(let seed=1;seed<=12;seed++){
     wasCounter=counter;
     const celebrating=vm.runInContext('!!celebration',sandbox);
     if(celebrating){assert.equal(element('scoreMoment').hidden,false);hold++;heldFrames++;if(!wasCelebrating)celebrationCount++;}
-    if(!celebrating&&wasCelebrating){assert.ok(hold>=53,'Scoring holds for 3.2 real seconds even at 4×');hold=0;assert.equal(element('scoreMoment').hidden,true)}
+    if(!celebrating&&wasCelebrating){assert.ok(hold>=80,'The victory dance holds for 4.8 real seconds even at 4×');hold=0;assert.equal(element('scoreMoment').hidden,true)}
     wasCelebrating=celebrating;
     const replay=vm.runInContext('replaying',sandbox);
     if(replay&&!wasReplay)replayCount++;
@@ -65,9 +65,9 @@ for(let seed=1;seed<=12;seed++){
    vm.runInContext(`clearMoment();running=true;paused=false;waiting=false;fullEffects=!reduced;replaying=false;replayed=false;speed=4;match.over=true;match.score=[scenario==='td'?7:scenario==='fg'?3:0,scenario==='safety'?2:0];
     event={team:0,start:scenario==='safety'?3:95,end:scenario==='safety'?0:100,gain:scenario==='safety'?-3:5,first:100,down:1,quarter:4,clock:4,scoreBefore:[0,0],type:scenario==='fg'?'kick':'run',playCall:'inside',qb:squads[0].find(p=>p.pos==='QB').id,target:squads[0].find(p=>p.pos==='HB').id,defender:squads[1].find(p=>p.pos==='ILB').id,score:scenario==='td'?7:scenario==='fg'?3:0,touchdown:scenario==='td',safety:scenario==='safety',text:'Test score'};
     motion=new PokeMotion.PlayMotion(event,[...squads[0].filter(p=>p.side==='offense'),...squads[1].filter(p=>p.side==='defense')]);phase=motion.resolveAt-.01;update(.02);`,sandbox);
-   assert.equal(vm.runInContext('!!celebration',sandbox),true);assert.equal(element('scoreMoment').hidden,false);
+   assert.equal(vm.runInContext('!!celebration',sandbox),true);assert.equal(element('scoreMoment').hidden,false);if(scenario==='td')assert.equal(vm.runInContext('camera',sandbox),83,'End-zone camera must reveal the scorer before the dance');
    assert.match(element('scoreMoment').innerHTML,scenario==='td'?/TOUCHDOWN/:scenario==='fg'?/IT’S GOOD/:/SAFETY/);
-   const team=scenario==='safety'?1:0;assert.equal(vm.runInContext(`motion.frame(motion.resolveAt+.3).players.filter(p=>p.team===${team}&&p.pose==='celebrate').length`,sandbox),11);
+   const team=scenario==='safety'?1:0;assert.equal(vm.runInContext(`motion.frame(motion.resolveAt+.3).players.filter(p=>p.team===${team}&&p.pose==='celebrate').length`,sandbox),10);assert.equal(vm.runInContext(`motion.frame(motion.resolveAt+.3).players.filter(p=>p.team===${team}&&p.pose==='dance').length`,sandbox),1);assert.match(element('scoreMoment').innerHTML,/score-hero/);assert.equal(vm.runInContext('celebration.scorer===motion.frame(motion.resolveAt+.3).players.find(p=>p.pose===\'dance\').p.id',sandbox),true);
    vm.runInContext('paused=true;update(1);',sandbox);assert.equal(vm.runInContext('celebration.elapsed',sandbox),0);vm.runInContext('paused=false;',sandbox);
    for(let i=0;i<50;i++)vm.runInContext('update(.06)',sandbox);
    assert.equal(vm.runInContext('running&&!!celebration',sandbox),true,'Final whistle waits for celebration');

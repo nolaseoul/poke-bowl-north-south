@@ -84,18 +84,18 @@ function resolve(){let e=event;feed.unshift({text:e.text,q:e.quarter,clock:e.clo
 function emit(x,y,n,color,kind='dust'){if(!fullEffects)return;for(let i=0;i<n;i++){let angle=Math.random()*Math.PI*2,force=kind==='confetti'?35+Math.random()*100:12+Math.random()*32;particles.push({x,y,vx:Math.cos(angle)*force,vy:Math.sin(angle)*force/9,life:kind==='confetti'?1.8:.35+Math.random()*.3,max:kind==='confetti'?1.8:.65,color,kind,size:kind==='spark'?2:3+Math.random()*3})}if(particles.length>260)particles.splice(0,particles.length-260)}
 function startCelebration(e){
  const team=e.safety?1-e.team:e.team,points=e.safety?2:e.score,p=squads[team].find(p=>p.id===(e.safety?e.defender:e.type==='kick'?e.qb:e.target)),title=e.touchdown?'TOUCHDOWN!':e.safety?'SAFETY!':'IT’S GOOD!';
- celebration={elapsed:0,duration:3.2,team};music.celebrate();phase=motion.resolveAt;
+ celebration={elapsed:0,duration:4.8,team,scorer:p.id,dance:PokeDances.signature(p.id)};music.celebrate();phase=motion.resolveAt;if(e.touchdown)camera=83;
  $('ultimateCall').hidden=true;$('actionCall').className='action-call';
- $('scoreMoment').innerHTML=`<span class="score-eyebrow">${match.names[team]} · +${points} POINTS</span><strong>${title}</strong><div class="score-hero"><img src="assets/${p.id}.png" alt="${p.name}"><span>${p.name}<small>${e.touchdown?'TAKES IT HOME':e.safety?'DEFENSE DELIVERS':'THROUGH THE UPRIGHTS'}</small></span></div><b class="score-line">BLUE ${String(match.score[0]).padStart(2,'0')} <i>:</i> ${String(match.score[1]).padStart(2,'0')} RED</b>`;
- $('scoreMoment').className='score-moment '+(team===0?'blue':'red')+(fullEffects?'':' reduced');$('scoreMoment').hidden=false;
- $('playLabel').textContent='CELEBRATION';
+ $('scoreMoment').innerHTML=`<span class="score-eyebrow">${match.names[team]} · +${points} POINTS</span><strong>${title}</strong><div class="score-hero"><img src="assets/${p.id}.png" alt="${p.name}"><span>${p.name}<small>${celebration.dance.name.toUpperCase()}</small></span></div><b class="score-line">BLUE ${String(match.score[0]).padStart(2,'0')} <i>:</i> ${String(match.score[1]).padStart(2,'0')} RED</b>`;
+ $('scoreMoment').className='score-moment dance-mode '+(team===0?'blue':'red')+(fullEffects?'':' reduced');$('scoreMoment').hidden=false;
+ $('playLabel').textContent=celebration.dance.name.toUpperCase();
  for(const color of ['#e5f989','#f0c16b',team===0?'#72d0ef':'#ef8b74'])emit(frameState.carrier.x,frameState.carrier.y,25,color,'confetti');
 }
 function moveParticles(step){for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=step;p.x+=p.vx*step;p.y+=p.vy*step;p.vx*=Math.exp(-step*3);p.vy+=step*(p.kind==='confetti'?-3:-.5);if(p.life<=0)particles.splice(i,1)}shake*=Math.exp(-step*15)}
 function update(dt){if(!running||paused||waiting||window.draftIsOpen)return;
  if(celebration){const previous=celebration.elapsed;celebration.elapsed+=dt;phase=motion.resolveAt+celebration.elapsed;frameState=motion.frame(phase);players=frameState.players;elapsed+=dt;moveParticles(dt);
   if(fullEffects&&Math.floor(previous*5)!==Math.floor(celebration.elapsed*5)){const actor=players.filter(p=>p.team===celebration.team)[Math.floor(celebration.elapsed*5)%11];emit(actor.tx,actor.ty,8,celebration.team===0?'#72d0ef':'#ef8b74','confetti')}
-  camera+=(clamp(frameState.focusY+9,22,78)-camera)*(1-Math.exp(-dt*5));$('playLabel').textContent='CELEBRATION';
+  camera+=((event.touchdown?83:clamp(frameState.focusY+9,22,78))-camera)*(1-Math.exp(-dt*5));$('playLabel').textContent=celebration.dance.name.toUpperCase();
   if(celebration.elapsed>=celebration.duration){celebration=null;$('scoreMoment').hidden=true;phase=motion.duration;}
   return;
  }

@@ -1,12 +1,34 @@
 /* Side-on stadium projection. Yardage is horizontal; sprites stay upright. */
 (function(root){
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dances=typeof module!=='undefined'?require('./dances.js'):root.PokeDances;
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
 class Stadium{
  constructor(canvas,images){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;this.sprites=root.PokeSprites?new root.PokeSprites.SpriteBank():null;
   this.scale=Math.min(2,Math.max(1,root.devicePixelRatio||1));canvas.width=1120*this.scale;canvas.height=640*this.scale;
   this.backdrop=null;if(root.Image){this.backdrop=new root.Image();this.backdrop.src='assets/stadium-grandstand-v1.webp';}
+ }
+ dancer(ctx,player,size,s){
+  const move=dances.sample(player.p.id,player.danceTime??s.celebration.elapsed,s.fullEffects);
+  ctx.save();ctx.translate(move.x,-move.lift);ctx.rotate(move.rotation);ctx.scale(move.sx,move.sy);
+  const actor={...player,pose:move.pose,move:move.pose==='run'?1:0,jump:0,stride:move.time*10,danceFacing:move.facing,danceTime:move.time},image=this.images[player.p.id];
+  ctx.imageSmoothingEnabled=false;
+  if(!this.sprites?.draw(ctx,actor,size,move.time,s.motion,s.event,s.phase,s.fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);
+  ctx.restore();
+ }
+ victoryScreen(s){
+  const c=s.celebration,player=s.frame.players.find(p=>p.team===c.team&&p.p.id===c.scorer);if(!player)return;
+  const ctx=this.ctx,color=c.dance.color,t=s.fullEffects?c.elapsed:0;
+  ctx.save();ctx.fillStyle='#111c29';ctx.fillRect(322,8,476,246);ctx.strokeStyle=color;ctx.lineWidth=3;ctx.strokeRect(327,13,466,236);
+  ctx.fillStyle='#071924';ctx.fillRect(334,20,452,222);ctx.fillStyle=c.team===0?'#285979':'#7d3f44';ctx.fillRect(334,20,452,29);
+  ctx.textAlign='center';ctx.font='bold 17px monospace';ctx.fillStyle='#fff5bb';ctx.fillText(s.event.touchdown?'TOUCHDOWN · DANCE CAM':'VICTORY DANCE CAM',560,40);
+  // The stadium camera shows the same sprite, facing and dance beat as the field.
+  ctx.fillStyle='#17313b';ctx.fillRect(352,176,416,18);ctx.fillStyle=color;ctx.globalAlpha=.25;ctx.beginPath();ctx.ellipse(560,184,68,8,0,0,7);ctx.fill();ctx.globalAlpha=1;
+  if(s.fullEffects)for(let i=0;i<10;i++){const x=360+(i*73)%400,y=65+(i*41)%103+Math.sin(t*4+i)*6;ctx.fillStyle=i%2?color:'#e5f989';ctx.fillRect(x-3,y,7,2);ctx.fillRect(x,y-3,2,7);}
+  ctx.save();ctx.translate(560,182);this.dancer(ctx,player,119,s);ctx.restore();
+  ctx.fillStyle='#e7f3d9';ctx.font='bold 19px monospace';ctx.fillText(player.p.name.toUpperCase(),560,213);ctx.fillStyle=color;ctx.font='bold 13px monospace';ctx.fillText(c.dance.name.toUpperCase(),560,234);
+  ctx.restore();
  }
  atmosphere(s){
   const ctx=this.ctx,t=s.fullEffects?(s.ambientTime??s.elapsed):0,cheering=Boolean((s.event?.touchdown||s.event?.score>0||s.event?.safety)&&s.phase>s.motion.contact),energy=cheering?1:.24;
@@ -24,6 +46,7 @@ class Stadium{
   [69,219,365,757,900,1050].forEach((x,i)=>{const y=209+(i%2)*13;ctx.fillStyle='#d6d8c8';ctx.fillRect(x,y-33,2,44);for(let strip=0;strip<8;strip++){const lift=Math.sin(t*4+i+strip*.55)*3;ctx.fillStyle=strip%3===1?'#e9e9cb':i<3?'#4597df':'#ee7169';ctx.fillRect(x+2+strip*4,y-32+lift,4,17);}});
   if(s.fullEffects&&!s.paused)for(let i=0;i<9;i++){if(Math.sin(t*2.3+i*21.7)>.995){const x=52+(i*137)%1050,y=98+(i%3)*44;ctx.fillStyle='#fff4d0';ctx.fillRect(x-3,y,7,2);ctx.fillRect(x,y-3,2,7);}}
   ctx.fillStyle='#0b1828';ctx.fillRect(452,25,213,38);ctx.strokeStyle='#55738c';ctx.lineWidth=1;ctx.strokeRect(452,25,213,38);ctx.textAlign='center';ctx.font='bold 9px monospace';ctx.fillStyle='#b5d1e8';ctx.fillText('P O K É  S T A D I U M',560,37);ctx.font='bold 15px monospace';const score=s.event&&s.phase<s.motion.resolveAt?(s.event.scoreBefore??s.score):s.score;ctx.fillStyle='#d0f3e7';ctx.fillText(score?`BLUE ${String(score[0]).padStart(2,'0')} : ${String(score[1]).padStart(2,'0')} RED`:'KANTO LEAGUE',560,55);
+  if(s.celebration)this.victoryScreen(s);
   ctx.fillStyle='#162c39';ctx.fillRect(0,260,1120,13);ctx.fillStyle='#92bdc4';ctx.fillRect(0,268,1120,2);
   // Team benches and the near camera rail give the field a foreground layer.
   ctx.fillStyle='#243a3b';ctx.fillRect(0,593,1120,47);ctx.fillStyle='#779595';ctx.fillRect(0,594,1120,2);
@@ -65,7 +88,7 @@ class Stadium{
     ctx.fillStyle='#0d26364d';ctx.beginPath();ctx.ellipse(p.x+8,p.y+11,down?25:19,6,0,0,7);ctx.fill();
     ctx.fillStyle=player.team===0?'#72d0efbb':'#ef8b74bb';ctx.beginPath();ctx.ellipse(p.x,p.y+8,down?21:16,5,0,0,7);ctx.fill();if(player.carrier&&!motion.kick){ctx.strokeStyle='#f0e785';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+8,22+Math.sin(elapsed*8),7,0,0,7);ctx.stroke()}
     if(fullEffects&&player.move&&!down){ctx.fillStyle=player.team===0?'#b2dce1':'#edb095';const feet=Math.sin(player.stride)*5;ctx.fillRect(p.x-9+feet,p.y+4,5,4);ctx.fillRect(p.x+5-feet,p.y+6,5,4)}
-    ctx.save();ctx.translate(p.x,p.y-bob-(fullEffects?player.jump:0));const rock=fullEffects&&player.move?Math.sin(player.stride)*.065:0;ctx.rotate(rock+player.lean+down*(player.pose==='dive'||player.pose==='miss'?-.5:1)*Math.PI/2);if(fullEffects&&player.pose==='throw')ctx.rotate(team===0?-.18:.18);if(fullEffects&&player.pose==='celebrate')ctx.rotate(Math.sin(elapsed*9)*.12);const image=this.images[player.p.id];ctx.imageSmoothingEnabled=false;if(!this.sprites?.draw(ctx,player,size,s.ambientTime??elapsed,motion,event,phase,fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);ctx.restore();
+    ctx.save();ctx.translate(p.x,p.y-bob-(fullEffects?player.jump:0));const rock=fullEffects&&player.move?Math.sin(player.stride)*.065:0;ctx.rotate(rock+player.lean+down*(player.pose==='dive'||player.pose==='miss'?-.5:1)*Math.PI/2);if(fullEffects&&player.pose==='throw')ctx.rotate(team===0?-.18:.18);if(fullEffects&&player.pose==='celebrate')ctx.rotate(Math.sin(elapsed*9)*.12);const image=this.images[player.p.id];ctx.imageSmoothingEnabled=false;if(player.pose==='dance')this.dancer(ctx,player,size,s);else if(!this.sprites?.draw(ctx,player,size,s.ambientTime??elapsed,motion,event,phase,fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);ctx.restore();
     if(player.carrier||player.p.id===event?.defender||waiting&&player.p.pos==='QB'){const text=player.p.name.toUpperCase();ctx.font='bold 10px monospace';ctx.textAlign='center';const width=ctx.measureText(text).width+8;ctx.fillStyle='#122a20ee';ctx.fillRect(p.x-width/2,p.y-size-10-(fullEffects?player.jump:0)-bob,width,16);ctx.fillStyle=player.carrier?'#efeea6':'#f5c8b3';ctx.fillText(text,p.x,p.y-size-(fullEffects?player.jump:0)-bob)}
   });
   // The selected defender's own elemental ultimate travels to the quarterback.

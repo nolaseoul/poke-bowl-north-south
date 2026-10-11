@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const Sim=require('../dist/sim.js'),Motion=require('../dist/motion.js');
 const commands=[];const context=new Proxy({measureText:t=>({width:t.length*6})},{get:(o,k)=>k in o?o[k]:(...args)=>{for(const v of args)if(typeof v==='number')assert.ok(Number.isFinite(v),`${String(k)} requires finite coordinates`);commands.push([k,...args.filter(v=>typeof v!=='object')]);}});
-const window={devicePixelRatio:3,Image:class{constructor(){this.complete=true;this.naturalWidth=2172}},PokeMotion:Motion};
+const window={devicePixelRatio:3,Image:class{constructor(){this.complete=true;this.naturalWidth=2172}},PokeMotion:Motion,PokeDances:require('../dist/dances.js')};
 const sandbox={window};vm.createContext(sandbox);vm.runInContext(fs.readFileSync(require.resolve('../dist/stadium.js'),'utf8'),sandbox);
 const canvas={getContext:()=>context},renderer=new window.PokeStadium.Stadium(canvas,{});
 assert.equal(canvas.width,2240);assert.equal(canvas.height,1280);assert.match(renderer.backdrop.src,/stadium-grandstand-v1.webp$/);assert.ok(fs.existsSync('dist/'+renderer.backdrop.src));

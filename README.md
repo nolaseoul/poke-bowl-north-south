@@ -17,7 +17,7 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - Every one of the 151 Pokémon has one fixed signature ultimate, visible while drafting and scouting. The simulation triggers relevant players’ moves automatically on both teams, adding +12 to their position skills for that play (capped at 99). Each Pokémon can use its ultimate once per set of downs. A first down, change of possession, or halftime kickoff recharges both teams. Ordinary downs and other quarter changes preserve spent charges. Expand **YOUR ULTIMATES** to see readiness; live move callouts, elemental effects and a power-up sound announce activations.
 - Live box scores track passing, rushing, receiving, defense, blocking, and ultimate uses (ULT).
 - Successful defensive counters show the defender charging the QB, firing their elemental signature, and knocking the QB down, with synchronized ultimate/impact sounds. A counter callout and a 1.25-second real-time hold keep the hit visible at 4×; highlight replays follow.
-- Touchdowns, made field goals, and safeties get a 3.2-second celebration: the scoring team jumps, fans cheer, confetti flies, a fanfare plays, and the updated score appears with the scorer. This real-time pause lasts at every broadcast speed; pause freezes it and reduced effects keeps the readable score moment without the extra motion. Highlights replay afterwards, then the next drive begins automatically in Auto mode.
+- Touchdowns, made field goals, and safeties get a 4.8-second celebration: the scorer performs a species-specific victory dance (151 stable routines), the stadium scoreboard switches to a synchronized Dance Cam close-up, teammates jump, fans cheer, confetti flies, a fanfare plays, and the updated score appears with the scorer. This real-time pause lasts at every broadcast speed; pause freezes it and reduced effects keeps the readable score moment without the extra motion. Highlights replay afterwards, then the next drive begins automatically in Auto mode.
 - The side-on 16-bit stadium includes a packed illustrated grandstand, animated foreground fans and flags, touchdown cheers, sunset floodlights, a live stadium scoreboard, and crisp rendering on high-density screens. It also includes route previews, ball flight, catches, pursuit, jukes, tackles, and touchdown celebrations. Play choices change passing depth, release timing, completion risk, and rushing lanes.
 - Stadium Radio has two original 130 BPM, 64-bar arrangements: Victory Voltage (SNES Battle Mix) and Midnight Rival (SNES Boss Mix). Thirteen procedural 16-bit PCM instruments supply synth leads, electric keys, brass, pads, bells, bass and a full drum kit, with distorted power chords, galloping bass, harmonic-minor leads, rapid arpeggios, stereo placement, reverb and touchdown fanfares. The full rhythm section hits on the first beat. Music and sound effects have separate controls.
 - Field FX include voiced “Ready, set, hike” cadence, the snap, passing whoosh, catch pop, tackle impact, kicks, whistles and touchdown cheers. FX start enabled after a click/tap and save their own mute preference. Cadence remains readable at every broadcast speed.
@@ -49,6 +49,7 @@ node tests/draft.cjs
 node tests/render.cjs
 node tests/playbook.cjs
 node tests/stadium.cjs
+node tests/dances.cjs
 node tests/fx.cjs
 node tests/sprites.cjs
 node tests/account.cjs

@@ -23,6 +23,8 @@ jobs:
         run: node tests/ultimates.cjs
       - name: Validate defensive counters and QB ultimate hits
         run: node tests/defense.cjs
+      - name: Validate signature dances and synchronized stadium screen
+        run: node tests/dances.cjs
       - name: Validate animation frames
         run: node tests/motion.cjs
       - name: Validate complete browser rendering and replay transitions
