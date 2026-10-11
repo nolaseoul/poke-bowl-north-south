@@ -14,6 +14,7 @@ A new browser automatically gets **22 unique starters from the 151 Kanto species
 
 Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams calling offense and defensive counters. Select 1×, 2×, or 4× broadcast speed, or pause the match. Kanto Blue attacks right and Rocket Red attacks left; possession changes turn the horizontal field around. Phones support portrait and landscape, with a horizontally scrolling playbook.
 
+- Basic visits and page views are tracked with Cloudflare Web Analytics. The private dashboard includes countries, referrers, devices and page performance; see [analytics access and setup](docs/analytics.md).
 - Game, roster and friend-invite links include a dedicated pixel-art stadium cover with Open Graph and X large-image metadata. See [share preview and artwork notes](docs/share-preview.md).
 - Name your team on the draft screen (up to 24 characters). The name is remembered on this device and appears in the scoreboard, playbook, feed, score celebrations and final result. A rename applies at the next kickoff.
 - Share your complete starting 22 with **Share team**. Your friend can preview the name and explicitly load the roster before editing or playing. **Invite friend · 1v1** creates a private 12-hour duel link. Two coaches draft their teams, lock hidden offense/defense calls each down, then watch one server-resolved match. Guest-friendly duels are unranked; the invite restores your seat in the browser you joined with.
