@@ -29,3 +29,7 @@ jobs:
         run: node tests/stadium.cjs
       - name: Validate stereo soundtrack, PCM instruments and controls
         run: node tests/music.cjs
+      - name: Validate synchronized game effects and cadence
+        run: node tests/fx.cjs
+      - name: Validate all eight-direction character animations
+        run: node tests/sprites.cjs

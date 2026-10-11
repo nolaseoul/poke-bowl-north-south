@@ -4,7 +4,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
 class Stadium{
  constructor(canvas,images){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;
+  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;this.sprites=root.PokeSprites?new root.PokeSprites.SpriteBank():null;
   this.scale=Math.min(2,Math.max(1,root.devicePixelRatio||1));canvas.width=1120*this.scale;canvas.height=640*this.scale;
   this.backdrop=null;if(root.Image){this.backdrop=new root.Image();this.backdrop.src='assets/stadium-grandstand-v1.webp';}
  }
@@ -32,7 +32,7 @@ class Stadium{
 
  draw(s){
   const ctx=this.ctx,{frame,motion,event,phase,elapsed,camera,fullEffects,shake,particles,replaying,paused,waiting,selectedPlay,squads}=s;
-  if(!frame)return;const team=event?.team??0,P=(x,y)=>project(x,y,camera,team),line=(a,b,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()},quad=(yard1,yard2,color)=>{let a=P(54,yard1),b=P(586,yard1),c=P(586,yard2),d=P(54,yard2);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill()};
+  if(!frame)return;this.sprites?.preload(frame.players.map(player=>player.p));const team=event?.team??0,P=(x,y)=>project(x,y,camera,team),line=(a,b,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()},quad=(yard1,yard2,color)=>{let a=P(54,yard1),b=P(586,yard1),c=P(586,yard2),d=P(54,yard2);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill()};
   ctx.setTransform(this.scale,0,0,this.scale,0,0);ctx.clearRect(0,0,1120,640);ctx.save();if(fullEffects&&shake>.1)ctx.translate(Math.sin(elapsed*103)*shake,Math.cos(elapsed*81)*shake*.6);
   this.atmosphere(s);
   ctx.fillStyle='#477d50';ctx.fillRect(0,273,1120,310);
@@ -58,7 +58,7 @@ class Stadium{
     ctx.fillStyle='#0d26364d';ctx.beginPath();ctx.ellipse(p.x+8,p.y+11,down?25:19,6,0,0,7);ctx.fill();
     ctx.fillStyle=player.team===0?'#72d0efbb':'#ef8b74bb';ctx.beginPath();ctx.ellipse(p.x,p.y+8,down?21:16,5,0,0,7);ctx.fill();if(player.carrier&&!motion.kick){ctx.strokeStyle='#f0e785';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y+8,22+Math.sin(elapsed*8),7,0,0,7);ctx.stroke()}
     if(fullEffects&&player.move&&!down){ctx.fillStyle=player.team===0?'#b2dce1':'#edb095';const feet=Math.sin(player.stride)*5;ctx.fillRect(p.x-9+feet,p.y+4,5,4);ctx.fillRect(p.x+5-feet,p.y+6,5,4)}
-    ctx.save();ctx.translate(p.x,p.y-bob-player.jump);const rock=fullEffects&&player.move?Math.sin(player.stride)*.065:0;ctx.rotate(rock+player.lean+down*(player.pose==='dive'||player.pose==='miss'?-.5:1)*Math.PI/2);if(fullEffects&&player.pose==='throw')ctx.rotate(team===0?-.18:.18);if(fullEffects&&player.pose==='celebrate')ctx.rotate(Math.sin(elapsed*9)*.12);const image=this.images[player.p.id];ctx.imageSmoothingEnabled=false;if(image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);ctx.restore();
+    ctx.save();ctx.translate(p.x,p.y-bob-player.jump);const rock=fullEffects&&player.move?Math.sin(player.stride)*.065:0;ctx.rotate(rock+player.lean+down*(player.pose==='dive'||player.pose==='miss'?-.5:1)*Math.PI/2);if(fullEffects&&player.pose==='throw')ctx.rotate(team===0?-.18:.18);if(fullEffects&&player.pose==='celebrate')ctx.rotate(Math.sin(elapsed*9)*.12);const image=this.images[player.p.id];ctx.imageSmoothingEnabled=false;if(!this.sprites?.draw(ctx,player,size,s.ambientTime??elapsed,motion,event,phase,fullEffects)&&image?.complete&&image.naturalWidth)ctx.drawImage(image,-size/2,-size+12,size,size);ctx.restore();
     if(player.carrier||player.p.id===event?.defender||waiting&&player.p.pos==='QB'){const text=player.p.name.toUpperCase();ctx.font='bold 8px monospace';ctx.textAlign='center';const width=ctx.measureText(text).width+8;ctx.fillStyle='#122a20ee';ctx.fillRect(p.x-width/2,p.y-size-10-player.jump-bob,width,13);ctx.fillStyle=player.carrier?'#efeea6':'#f5c8b3';ctx.fillText(text,p.x,p.y-size-player.jump-bob)}
   });
   const ball=frame.ball;if(ball.visible){const p=P(ball.x,ball.y),lift=ball.arc*.75;ctx.fillStyle='#15341f6b';ctx.beginPath();ctx.ellipse(p.x,p.y+7,5+Math.max(0,lift)*.025,3,0,0,7);ctx.fill();ctx.save();ctx.translate(p.x,p.y-12-lift);ctx.rotate(ball.spin);ctx.fillStyle='#9a522d';ctx.strokeStyle='#ffe5b2';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,5,7,0,0,7);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(-2,-3);ctx.lineTo(2,3);ctx.stroke();ctx.restore()}
