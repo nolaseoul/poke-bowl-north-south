@@ -88,7 +88,7 @@
    client.auth.onAuthStateChange((event,value)=>{session=value;if(event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY')setTimeout(()=>signedIn(value,event==='PASSWORD_RECOVERY'),0)});
    const {data,error}=await client.auth.getSession();if(error)message(error.message,true);await signedIn(data.session);
   }else{dialog.classList.add('auth-unavailable');$('authSetupNotice').hidden=false;['authSubmit','googleLogin','forgotPassword','signupTab','authEmail','authPassword'].forEach(id=>$(id).disabled=true)}
-  $('googleLogin').disabled=!client||!config.google;$('googlePending').hidden=Boolean(client&&config.google);status();if(!chosen&&!dialog.open)show(session?'profile':'login');
- })().catch(error=>{status();show('login');message(error.message,true)});
- window.PokeAccount={ready,async prepareMatch(ids){await ready;if(!chosen){show(session?'profile':'login');throw Error('Choose an account or guest play before kickoff.')}if(!session||!profile)return null;return api('matches',{method:'POST',body:JSON.stringify({lineup:ids})})},async finishMatch(ticket,calls,score){if(!ticket)return {saved:false};return saveMatch(ticket,calls,score)},isSignedIn:()=>Boolean(session&&profile)};
+  $('googleLogin').disabled=!client||!config.google;$('googlePending').hidden=Boolean(client&&config.google);status();if(!chosen&&!dialog.open&&!window.PokeWelcome?.active)show(session?'profile':'login');
+ })().catch(error=>{status();if(!window.PokeWelcome?.active)show('login');message(error.message,true)});
+ window.PokeAccount={ready,async requestEntry(){await ready;if(!chosen)show(session?'profile':'login')},async prepareMatch(ids){await ready;if(!chosen){show(session?'profile':'login');throw Error('Choose an account or guest play before kickoff.')}if(!session||!profile)return null;return api('matches',{method:'POST',body:JSON.stringify({lineup:ids})})},async finishMatch(ticket,calls,score){if(!ticket)return {saved:false};return saveMatch(ticket,calls,score)},isSignedIn:()=>Boolean(session&&profile)};
 })();

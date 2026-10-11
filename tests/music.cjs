@@ -5,6 +5,8 @@ const node=()=>({connect(){},disconnect(){},gain:param(),frequency:param(),thres
 global.AudioContext=class{constructor(){this.currentTime=0;this.sampleRate=deviceRate;this.state='running';this.destination={}}createGain(){return node()}createBiquadFilter(){return node()}createDynamicsCompressor(){return node()}createStereoPanner(){return node()}createConvolver(){const n=node(),rate=this.sampleRate;Object.defineProperty(n,'buffer',{set(b){assert.equal(b.sampleRate,rate,'Reverb must use the output-device sample rate')}});return n}createDelay(){return node()}createBufferSource(){return node()}createBuffer(channels,length,rate){const data=Array.from({length:channels},()=>new Float32Array(length));return{sampleRate:rate,duration:length/rate,getChannelData(ch){return data[ch]}}}async resume(){this.state='running'}};
 global.setInterval=()=>{let id=nextId++;intervals.add(id);return id};global.clearInterval=id=>intervals.delete(id);
 (async()=>{
+ assert.equal(new ChipMusic().track,'football','New listeners get the football fanfare');
+ const hornPhrase=Array.from({length:16},(_,i)=>scoreStep(tracks.football,i,60/130/4)).flat().filter(e=>e.instrument==='brass');assert.ok(hornPhrase.some(e=>e.duration>.3),'Football hook must sustain horn phrases instead of constant sixteenth notes');assert.ok(hornPhrase.every(e=>e.note<90),'The main fanfare stays in a full-bodied horn register');
  const colors=new Map();
  for(const instrument of ['lead','bass','pad','keys','bell','brass','kick','snare','hat','shaker','crash','guitar','tom']){
   const pcm=patch(60,.3,instrument);assert.ok(pcm.length>RATE*.3);let energy=0;for(const v of pcm){assert.ok(Number.isFinite(v)&&Math.abs(v)<=1);assert.ok(Math.abs(v*32767-Math.round(v*32767))<.002,'Samples must use 16-bit quantization');energy+=v*v;}
@@ -25,5 +27,5 @@ global.setInterval=()=>{let id=nextId++;intervals.add(id);return id};global.clea
  }
  const race=new ChipMusic();const start=race.play();race.stop();await start;assert.equal(race.enabled,false);assert.equal(intervals.size,0);
  for(const rate of [44100,96000]){deviceRate=rate;const device=new ChipMusic();await device.play();device.stop();assert.equal(intervals.size,0)}
- console.log(`PASS: two 64-bar stereo arrangements, 13 distinct 16-bit PCM instruments, ${scheduled} scheduled voices, chorus dynamics, bounded cache, volume bounds, single scheduler, restart, track switch, fanfares and cancelled startup.`);
+ console.log(`PASS: three 64-bar stereo arrangements, 13 distinct 16-bit PCM instruments, ${scheduled} scheduled voices, chorus dynamics, bounded cache, volume bounds, single scheduler, restart, track switch, fanfares and cancelled startup.`);
 })().catch(e=>{console.error(e);process.exitCode=1});

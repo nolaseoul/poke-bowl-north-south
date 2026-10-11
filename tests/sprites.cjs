@@ -17,5 +17,13 @@ const player={p:{id:25},team:0,tx:320,ty:20,pose:'run',move:1,stride:0,jump:0},m
 bank.draw(ctx,player,48,0,motion,event,1,true);bank.draw(ctx,{...player,ty:21,stride:2},48,.1,motion,event,1.1,true);assert.equal(bank.facing.get('0:25').row,6);bank.draw(ctx,{...player,ty:20,stride:3},48,.2,motion,event,1.2,true);assert.equal(bank.facing.get('0:25').row,2,'Players must turn on a change of travel direction');
 const before=bank.facing.get('0:25').row;bank.draw(ctx,{...player,ty:20},48,.3,motion,event,1.3,true);assert.equal(bank.facing.get('0:25').row,before,'Stationary player must retain facing');
 bank.draw(ctx,{...player,pose:'idle',move:0},48,.4,{},event,0,true);assert.equal(bank.facing.get('0:25').row,6,'New play resets facing to formation');assert.ok(draws.length===5);assert.match(fs.readFileSync('dist/sprite-credits.html','utf8'),/CC BY-NC 4.0/);
-bank.draw(ctx,{...player,pose:'block',move:0,engageFacing:2,actionFrame:.8},48,99,motion,event,1.2,true);assert.equal(bank.facing.get('0:25').row,2);assert.equal(draws.at(-1)[1],Math.round(.8*(data[25].states.action.ticks.length-1))*data[25].states.action.w,'Engagement uses an explicit native action frame');const anchor=data[25].states.action.anchors[2][Math.round(.8*(data[25].states.action.ticks.length-1))];assert.equal(draws.at(-1)[6],-anchor[1]*data[25].scale+10,'Controlled poses must keep their feet planted');
+bank.draw(ctx,{...player,pose:'block',move:0,engageFacing:2,actionFrame:.8},48,99,motion,event,1.2,true);assert.equal(bank.facing.get('0:25').row,2);assert.equal(draws.at(-1)[1],Math.round(.8*(data[25].states.action.ticks.length-1))*data[25].states.action.w,'Engagement uses an explicit native action frame');const anchor=data[25].states.action.anchors[6][Math.round(.8*(data[25].states.action.ticks.length-1))];assert.equal(draws.at(-1)[6],-anchor[1]*data[25].scale+10,'Controlled poses must keep their feet planted');
+// Verify the source atlas rows, not only the logical direction cache.
+for(const attackTeam of [0,1])for(const actorTeam of [0,1])for(const phase of [0,.55]){
+ const expected=(attackTeam===0)===(actorTeam===attackTeam)?6:2;
+ const actor={...player,team:actorTeam,pose:'idle',move:0,formationFacing:expected,engageFacing:4,danceFacing:0};
+ bank.draw(ctx,actor,48,0,motion,{team:attackTeam},phase,true);
+ assert.equal(bank.facing.get(actorTeam+':25').row,expected,'Pre-snap overrides stale directional poses');
+ assert.equal(draws.at(-1)[2],((8-expected)%8)*data[25].states.idle.h,'Source sheet east/west rows must be mirrored into logical directions');
+}
 console.log(`PASS: all 151 species, ${atlases.size} genuine eight-direction atlases, ${frames} directional frames, complete playback cycles, facing changes, stationary facing and pose selection.`);

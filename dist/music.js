@@ -22,6 +22,36 @@ const tracks={
  [96,91,88,0,91,96,100,98,96,91,88,84,88,91,96,0],
  [95,90,87,83,90,87,83,78,83,87,90,93,95,99,100,0]]}
 };
+// Eight-bar original football fanfare. Longer horn phrases leave room for the drumline.
+tracks.football={name:'Friday Night Voltage · Stadium Fanfare',bpm:130,style:'stadium',roots:[50,46,43,45,50,46,43,45],chords:tracks.victory.chords,melody:[
+ [74,0,0,0,74,0,77,0,81,0,0,0,79,0,77,0],
+ [70,0,0,0,74,0,77,0,82,0,0,0,81,0,77,0],
+ [79,0,0,0,77,0,74,0,70,0,0,0,74,0,77,0],
+ [73,0,0,0,76,0,79,0,81,0,79,0,76,0,73,0],
+ [74,0,77,0,81,0,0,0,86,0,0,0,84,0,81,0],
+ [82,0,0,0,81,0,77,0,74,0,0,0,77,0,81,0],
+ [79,0,0,0,82,0,79,0,77,0,0,0,74,0,70,0],
+ [73,0,76,0,79,0,81,0,85,0,0,0,81,0,73,0]]};
+function footballStep(track,step,tick){
+ const bar=Math.floor(step/16)%64,s=step%16,index=bar%8,section=Math.floor(bar/8),chorus=[2,3,6,7].includes(section),bridge=section===4,rootNote=track.roots[index],chord=track.chords[index],events=[];
+ const add=(note,length,instrument,gain,pan=0,wet=.1,offset=0)=>events.push({note,duration:tick*length,instrument,gain,pan,wet,offset});
+ const note=track.melody[index][s];
+ if(note&&(!bridge||s%4===0)){let next=track.melody[index].findIndex((n,i)=>i>s&&n),length=(next<0?16:next)-s;
+  add(note,length*.84,'brass',.22,-.22,.14);add(note-12,length*.78,'lead',.07,.18,.06);
+  if(chorus){add(note+12,length*.7,'brass',.075,.35,.13);add(note-12,length*.9,'keys',.07,-.4,.15);}
+ }
+ if(s%4===0){add(rootNote-12,2.7,'bass',.4,0,.01);add(rootNote,1.5,'guitar',.14,-.6,.04);add(rootNote+7,1.5,'guitar',.14,.6,.04);}
+ if([6,10,14].includes(s))add(rootNote-12+(s===14?7:0),1.2,'bass',.27,0,.01);
+ if([0,8].includes(s))chord.slice(0,3).forEach((n,i)=>add(rootNote+n,bridge?5:2.5,'brass',.06,[-.5,0,.5][i],.12));
+ if(chorus){if(s===0)chord.forEach((n,i)=>add(rootNote+12+n,13,'pad',.035,i%2?.65:-.65,.2));if(s%2===1)add(rootNote+24+chord[(s+bar)%4],.8,'bell',.055,.55,.14);if([3,6,11,14].includes(s))chord.slice(0,3).forEach((n,i)=>add(rootNote+12+n,1.1,'keys',.05,-.5+i*.5,.12));if(s%2===0)add(44,.6,'shaker',.055,-.4,.04);}
+ if([0,6,8,10].includes(s))add(36,2,'kick',.64,0,0);
+ if([4,12].includes(s)){add(40,1.6,'snare',.46,-.1,.07);add(40,.8,'snare',.13,.1,.05,tick*.52);}
+ if([3,7,11,15].includes(s))add(40,.7,'snare',s===15?.19:.09,-.25,.04);
+ if(s%2===0)add(42,.55,'hat',.09,.35,.025);
+ if(bar%4===3&&s>=12){add([55,52,48,43][s-12],1.6,'tom',.26,(s-13.5)*.3,.1);if(s%2===1)add(40,.8,'snare',.2,-.1,.07,tick*.5);}
+ if(s===0&&bar%4===0)add(49,7,'crash',.18,.25,.18);
+ return events;
+}
 // Each patch is a small PCM sample with a shaped envelope, quantized to 16 bits.
 // Keeping synthesis pure also lets the release checks render the exact score offline.
 function patch(note,duration,instrument='lead',rate=RATE){
@@ -40,13 +70,14 @@ function patch(note,duration,instrument='lead',rate=RATE){
   else if(instrument==='keys'){wave=Math.sin(TAU*freq*t+2.4*Math.exp(-t*12)*Math.sin(TAU*freq*t*2))*.72+Math.sin(TAU*freq*t*3)*.12*Math.exp(-t*6);env=(1-Math.exp(-t*1600))*Math.exp(-t*3.6);}
   else if(instrument==='bell'){wave=Math.sin(TAU*freq*t+1.1*Math.exp(-t*5)*Math.sin(TAU*freq*t*3.01))*.8;env=(1-Math.exp(-t*600))*Math.exp(-t*5);}
   else if(instrument==='pad'){for(let h=1;h<=5;h++)wave+=(Math.sin(TAU*freq*h*.998*t)+Math.sin(TAU*freq*h*1.002*t))*(h%2?1:.35)/(h*5);env=Math.min(1,t/.14)*Math.min(1,release*2);}
-  else if(instrument==='brass'){for(let h=1;h<=Math.min(9,Math.floor(rate*.45/freq));h++)wave+=Math.sin(TAU*freq*h*t)*Math.exp(-h*.16)/4;env=(1-Math.exp(-t*950))*(.45+.55*Math.exp(-t*20));}
+  else if(instrument==='brass'){for(let h=1;h<=Math.min(9,Math.floor(rate*.45/freq));h++)wave+=Math.sin(TAU*freq*h*t)*Math.exp(-h*.16)/4;env=(1-Math.exp(-t*950))*(.75+.25*Math.exp(-t*20));}
   else{const vibrato=1+.002*Math.sin(TAU*5.2*t)*Math.min(1,t*5);for(let h=1;h<=Math.min(10,Math.floor(rate*.45/freq));h++)wave+=Math.sin(TAU*freq*h*vibrato*t)*(h%2?1:.65)/(h*1.8);wave+=Math.sin(TAU*freq*1.004*t)*.13;env=(1-Math.exp(-t*1500))*(.48+.52*Math.exp(-t*24));}
   out[i]=Math.round(Math.max(-1,Math.min(1,wave*env*release)) *32767)/32767;
  }
  return out;
 }
 function scoreStep(track,step,tick){
+ if(track.style==='stadium')return footballStep(track,step,tick);
  const bar=Math.floor(step/16)%64,s=step%16,index=bar%8,section=Math.floor(bar/8),rootNote=track.roots[index],chord=track.chords[index],events=[];
  const add=(note,duration,instrument,gain,pan=0,wet=.1,offset=0)=>{if(note)events.push({note,duration,instrument,gain,pan,wet,offset})};
  const intro=section===0,breakdown=section===4,chorus=[2,3,6,7].includes(section);
@@ -73,7 +104,7 @@ function scoreStep(track,step,tick){
  return events;
 }
 class ChipMusic{
- constructor(){this.context=null;this.master=null;this.track='victory';this.volume=.35;this.enabled=false;this.step=0;this.nextTime=0;this.timer=null;this.voices=new Set();this.duckUntil=0;this.onChange=()=>{};this.revision=0;this.cache=new Map();this.buses=[];}
+ constructor(){this.context=null;this.master=null;this.track='football';this.volume=.35;this.enabled=false;this.step=0;this.nextTime=0;this.timer=null;this.voices=new Set();this.duckUntil=0;this.onChange=()=>{};this.revision=0;this.cache=new Map();this.buses=[];}
  async prepare(){
   if(!this.context){
    const Audio=root.AudioContext||root.webkitAudioContext;if(!Audio)throw Error('This browser does not support Web Audio.');this.context=new Audio();const c=this.context;

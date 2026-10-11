@@ -39,6 +39,8 @@ jobs:
         run: node tests/fx.cjs
       - name: Validate all eight-direction character animations
         run: node tests/sprites.cjs
+      - name: Validate detailed portraits and readable elemental ultimates
+        run: node tests/presentation.cjs
       - name: Validate account flows and guest exclusion
         run: node tests/account.cjs
       - name: Validate server-verified results and persistent standings

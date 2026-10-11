@@ -8,8 +8,7 @@ Domain registration stays at Namecheap. Authoritative DNS uses Cloudflare:
 `lindsey.ns.cloudflare.com` and `tim.ns.cloudflare.com`. Both hostnames are
 Worker custom domains declared in `wrangler.jsonc`; keep them on future deploys.
 The zone uses the Free plan. Nameservers were saved on October 11, 2026;
-initial DNS propagation and HTTPS activation must finish before the custom
-addresses are reachable.
+DNS and HTTPS were verified live on both hostnames on October 11, 2026.
 
 Cloudflare project: `poke-bowl-north-south` (Worker + Static Assets).
 Private PvP rooms: SQLite Durable Object `PvPRoom`, binding `PVP` (12-hour expiry).

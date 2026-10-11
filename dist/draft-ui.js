@@ -19,7 +19,7 @@
   function renderSlots(){
     $('draftSlots').innerHTML=slots.filter(s=>s.side===draftSide).map(slot=>{
       const p=draft.ids[slot.index]===null?null:player(draft.ids[slot.index],slot.pos);
-      return `<button class="draft-slot ${selected===slot.index?'selected':''} ${p?'filled':''}" data-slot="${slot.index}" aria-pressed="${selected===slot.index}" aria-label="${slot.label}: ${p?p.name+', '+p.ovr+' overall':'empty'}"><span class="slot-position">${slot.label}</span>${p?`<img src="assets/${p.id}.png" alt=""><span class="slot-name">${p.name}</span><b>${p.ovr}</b>`:'<span class="empty-pick">＋ Choose a Pokémon</span>'}</button>`;
+      return `<button class="draft-slot ${selected===slot.index?'selected':''} ${p?'filled':''}" data-slot="${slot.index}" aria-pressed="${selected===slot.index}" aria-label="${slot.label}: ${p?p.name+', '+p.ovr+' overall':'empty'}"><span class="slot-position">${slot.label}</span>${p?`<img src="assets/portraits/${p.id}.png" alt=""><span class="slot-name">${p.name}</span><b>${p.ovr}</b>`:'<span class="empty-pick">＋ Choose a Pokémon</span>'}</button>`;
     }).join('');
     $('draftSlots').querySelectorAll('[data-slot]').forEach(button=>button.onclick=()=>{selected=+button.dataset.slot;limit=24;renderSlots();renderMarket()});
     document.querySelectorAll('[data-draft-side]').forEach(button=>{const active=button.dataset.draftSide===draftSide;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
@@ -40,7 +40,7 @@
     const slot=slots[selected],current=draft.ids[selected]===null?null:player(draft.ids[selected],slot.pos);
     $('slotEyebrow').textContent=`SCOUTING ${slot.label} · ${slot.side.toUpperCase()}`;
     $('positionTitle').textContent=titles[slot.pos];$('positionHint').textContent=hints[slot.pos];
-    $('currentPick').innerHTML=current?`<img src="assets/${current.id}.png" alt=""><div><small>YOUR STARTER</small><b>${current.name}</b><span>${current.ovr} OVR <button id="removePick" aria-label="Remove ${current.name} from ${slot.label}">Remove</button></span></div>`:'<span class="open-spot">OPEN POSITION<br><b>Make your pick ↓</b></span>';
+    $('currentPick').innerHTML=current?`<img src="assets/portraits/${current.id}.png" alt=""><div><small>YOUR STARTER</small><b>${current.name}</b><span>${current.ovr} OVR <button id="removePick" aria-label="Remove ${current.name} from ${slot.label}">Remove</button></span></div>`:'<span class="open-spot">OPEN POSITION<br><b>Make your pick ↓</b></span>';
     if(current)$('removePick').onclick=()=>{draft.remove(selected);undoClear=null;save();render();announce(`${slot.label} is open. Choose a new starter.`)};
     const query=$('draftSearch').value.trim().toLowerCase().replace(/^#/,'');
     const type=$('draftType').value,sort=$('draftSort').value;
@@ -49,7 +49,7 @@
     $('prospectCount').textContent=`${candidates.length} PROSPECT${candidates.length===1?'':'S'} · SHOWING ${Math.min(limit,candidates.length)}`;
     $('prospects').innerHTML=candidates.slice(0,limit).map(p=>{
       const assigned=draft.ids.indexOf(p.id),taken=assigned!==-1,starter=assigned===selected;
-      return `<button class="prospect ${taken?'taken':''} ${starter?'starter':''}" data-pick="${p.id}" ${taken?'disabled':''} aria-label="Draft ${p.name} at ${slot.label}, ${p.ovr} overall"><div class="prospect-top"><small>#${String(p.id).padStart(3,'0')}</small><b>${p.ovr}<span>OVR</span></b></div><img src="assets/${p.id}.png" alt="" loading="lazy"><h3>${p.name}</h3><div class="type-tags">${p.types.map(t=>`<span class="type-${t}">${t}</span>`).join('')}</div><div class="prospect-ultimate" style="--ultimate:${PokeSim.ultimates.signature(p.id).color}">✦ ${PokeSim.ultimates.signature(p.id).name}</div><div class="prospect-skills">${PokeSim.specs[slot.pos].map(k=>`<div><span>${k}</span><b>${p.ratings[k]}</b></div>`).join('')}</div><span class="pick-action">${starter?'YOUR STARTER':taken?'DRAFTED · '+slots[assigned].label:'DRAFT AT '+slot.label+' ＋'}</span></button>`;
+      return `<button class="prospect ${taken?'taken':''} ${starter?'starter':''}" data-pick="${p.id}" ${taken?'disabled':''} aria-label="Draft ${p.name} at ${slot.label}, ${p.ovr} overall"><div class="prospect-top"><small>#${String(p.id).padStart(3,'0')}</small><b>${p.ovr}<span>OVR</span></b></div><img src="assets/portraits/${p.id}.png" alt="" loading="lazy"><h3>${p.name}</h3><div class="type-tags">${p.types.map(t=>`<span class="type-${t}">${t}</span>`).join('')}</div><div class="prospect-ultimate" style="--ultimate:${PokeSim.ultimates.signature(p.id).color}">✦ ${PokeSim.ultimates.signature(p.id).name}</div><div class="prospect-skills">${PokeSim.specs[slot.pos].map(k=>`<div><span>${k}</span><b>${p.ratings[k]}</b></div>`).join('')}</div><span class="pick-action">${starter?'YOUR STARTER':taken?'DRAFTED · '+slots[assigned].label:'DRAFT AT '+slot.label+' ＋'}</span></button>`;
     }).join('')+(candidates.length===0?'<p class="empty-search">No Pokémon match that search. Try another name or type.</p>':'')+(candidates.length>limit?`<button id="moreProspects" class="more-prospects">SHOW MORE PROSPECTS · ${candidates.length-limit} REMAINING ↓</button>`:'');
     $('prospects').querySelectorAll('[data-pick]').forEach(button=>button.onclick=()=>{
       const id=+button.dataset.pick,name=player(id,slot.pos).name;

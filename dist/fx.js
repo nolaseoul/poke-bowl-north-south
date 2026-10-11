@@ -3,13 +3,14 @@
 'use strict';
 const RATE=32000,TAU=Math.PI*2;
 const cadence=Object.freeze(['ready','set','hut','hike']);
-const durations={ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.42};
+const durations={ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.72,charge:.3};
 function effect(kind,rate=RATE){
  const duration=durations[kind];if(!duration)return new Float32Array(0);
  const out=new Float32Array(Math.ceil(duration*rate));let seed=719,phase=0,low=0;
  for(let i=0;i<out.length;i++){
   const t=i/rate,u=t/duration;seed=(Math.imul(seed,1664525)+1013904223)>>>0;const noise=seed/2147483648-1;low+=.12*(noise-low);let v=0;
   if(kind==='hit'){phase+=TAU*(48+115*Math.exp(-t*36))/rate;v=Math.sin(phase)*Math.exp(-t*19)*.85+noise*Math.exp(-t*65)*.5+low*Math.exp(-t*14)*.45;}
+  else if(kind==='charge'){phase+=TAU*(180+u*u*1100)/rate;v=(Math.sin(phase)*.5+noise*.15)*u;}
   else if(kind==='ultimate'){const note=[440,660,880,1320][Math.min(3,Math.floor(u*4))];phase+=TAU*note/rate;v=(Math.sin(phase)*.6+Math.sin(phase*2)*.2)*Math.sin(Math.PI*u)**.7;}
   else if(kind==='catch')v=(noise-low)*Math.exp(-t*75)*.75+Math.sin(TAU*210*t)*Math.exp(-t*40)*.55;
   else if(kind==='snap'||kind==='kick'){phase+=TAU*(kind==='kick'?170-95*u:320-200*u)/rate;v=Math.sin(phase)*Math.exp(-t*35)*.45+noise*Math.exp(-t*55)*.55;}
@@ -29,7 +30,7 @@ function effect(kind,rate=RATE){
 function cuesBetween(m,e,from,to,replay=false){
  const cues=[];const add=(at,kind)=>{if(from<at&&to>=at)cues.push({at,kind})};
  if(!replay){add(-.8,'ready');add(-.46,'set');add(-.12,'hut');add(m.snap-.32,'hike')}
- add(m.snap,'snap');if(e.ultimates?.length)add((m.ultimateAt??m.snap)+.04,'ultimate');
+ add(m.snap,'snap');if(m.powerCues){for(const cue of m.powerCues){add(cue.at,'charge');add(cue.at+.28,'ultimate')}}else if(e.ultimates?.length)add((m.ultimateAt??m.snap)+.04,'ultimate');
  if(m.kick)add(1.1,'kick');else if(!m.run&&!m.sack)add(m.release,'throw');
  if(e.complete||e.interception)add(m.catchAt,'catch');
  if(e.touchdown)add(m.contact,'cheer');else if(!m.kick&&(m.run||m.sack||e.complete||e.fumble))add(m.contact,'hit');
