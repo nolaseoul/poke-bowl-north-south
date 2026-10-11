@@ -10,7 +10,8 @@ for(const [key,call] of Object.entries(calls)){
   for(let i=0;i<500;i++){
     const match=new Match(random),e=match.next(key),motion=new PlayMotion(e,roster);
     assert.equal(e.playCall,key);
-    if(call.kind==='run'){assert.equal(e.type,'run');assert.ok(['HB','FB'].includes(roster.find(p=>p.id===e.target).pos))}
+    if(e.counter){assert.equal(e.type,'sack');assert.equal(e.target,e.qb)}
+    else if(call.kind==='run'){assert.equal(e.type,'run');assert.ok(['HB','FB'].includes(roster.find(p=>p.id===e.target).pos))}
     else{assert.ok(['pass','sack'].includes(e.type));assert.equal(e.target,key==='action'?34:roster.filter(p=>p.pos==='WR')[key==='deep'?1:0].id);if(key==='action')assert.equal(e.target,34);if(e.complete){yards+=e.gain;completions++}}
     for(const route of routes(key,20,roster)){assert.ok(roster.some(p=>p.id===route.id));assert.ok(route.points.length>=2);for(const point of route.points)assert.ok(Number.isFinite(point.x)&&Number.isFinite(point.y))}
     for(const t of [0,motion.snap+.2,motion.release+.1,motion.catchAt+.1,motion.contact+.1]){
@@ -25,7 +26,7 @@ for(const [key,call] of Object.entries(calls)){
 }
 assert.ok(samples.deep.yards>samples.action.yards&&samples.action.yards>samples.quick.yards,'Passing depth must change actual completed yards');
 assert.ok(samples.quick.completions>samples.deep.completions,'Short passes should complete more often');
-const e=new Match(random).next('quick'),quick=new PlayMotion(e,roster),deep=new PlayMotion({...e,playCall:'deep'},roster),action=new PlayMotion({...e,playCall:'action'},roster);
+const e=new Match(random).next('quick','gap'),quick=new PlayMotion(e,roster),deep=new PlayMotion({...e,playCall:'deep'},roster),action=new PlayMotion({...e,playCall:'action'},roster);
 assert.ok(quick.release<deep.release&&deep.release<action.release);
 assert.equal(action.frame(action.snap+.2).stage,'PLAY FAKE');
 assert.equal(action.frame(action.snap+.2).players.find(p=>p.p.pos==='QB').pose,'handoff');

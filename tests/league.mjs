@@ -35,7 +35,7 @@ const ids=new draft.Draft().autoFill(rules.random(22)).map(p=>p.id);
 assert.equal((await request('matches','POST',{lineup:ids.map(()=>25)})).status,400);
 const ticket=(await request('matches','POST',{lineup:ids})).data;
 const match=new sim.Match(rules.random(ticket.seed),{teams:rules.teams(ids,ticket.seed)}),calls=[];
-while(!match.over){const call=match.team===0&&match.plays%2?'deep':null;calls.push(call);match.next(call)}
+while(!match.over){if(match.team===1){const defense=Object.keys(sim.defenseCalls)[match.plays%5];calls.push({defense});match.next(null,defense)}else{const call=match.plays%2?'deep':null;calls.push(call);match.next(call)}}
 assert.deepEqual(rules.replay(ids,ticket.seed,calls).score,match.score);
 assert.throws(()=>rules.replay(ids,ticket.seed,calls.slice(0,-1)),/Finish/);
 assert.throws(()=>rules.replay(ids,ticket.seed,[...calls,null]),/history/);

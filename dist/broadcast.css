@@ -24,3 +24,7 @@ body:has(#broadcastScreen:not([hidden])) header{height:82px}.match-heading{paddi
 .score-moment.paused,.score-moment.paused img{animation-play-state:paused}
 
 .score-moment.paused{animation:none;opacity:1;transform:translateX(-50%)}
+
+/* Defensive counter calls retain the same touch-friendly coaching controls. */
+.ultimate-call>em{display:flex;align-items:center;font:800 20px 'Barlow Condensed';font-style:normal;color:#182519;background:#efdb83;border-radius:3px;padding:6px 12px;white-space:nowrap}.arena .action-call.counter{background:#291d32ee;color:#f1cf99;border-color:#dca1fa;font-size:clamp(20px,3vw,38px)}
+@media(max-width:680px){.ultimate-call>em{font-size:13px;padding:4px 7px}.arena .action-call.counter{font-size:20px}.playbook .ultimate-roster summary{font-size:13px}}

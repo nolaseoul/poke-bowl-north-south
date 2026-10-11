@@ -26,7 +26,7 @@ function effect(kind,rate=RATE){
 function cuesBetween(m,e,from,to,replay=false){
  const cues=[];const add=(at,kind)=>{if(from<at&&to>=at)cues.push({at,kind})};
  if(!replay){add(-.8,'ready');add(-.3,'set');add(m.snap-.18,'hike')}
- add(m.snap,'snap');if(e.ultimates?.length)add(m.snap+.04,'ultimate');
+ add(m.snap,'snap');if(e.ultimates?.length)add((m.ultimateAt??m.snap)+.04,'ultimate');
  if(m.kick)add(1.1,'kick');else if(!m.run&&!m.sack)add(m.release,'throw');
  if(e.complete||e.interception)add(m.catchAt,'catch');
  if(e.touchdown)add(m.contact,'cheer');else if(!m.kick&&(m.run||m.sack||e.complete||e.fumble))add(m.contact,'hit');

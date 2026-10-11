@@ -8,7 +8,7 @@ const PokeMotion=require('../dist/motion.js');
 const PokeStadium=require('../dist/stadium.js');
 const {cuesBetween}=require('../dist/fx.js');
 const heard=new Set();
-let replayCount=0,ellipseCount=0,celebrationCount=0,heldFrames=0;
+let replayCount=0,ellipseCount=0,celebrationCount=0,heldFrames=0,counterCount=0,defenseWaits=0;
 function randomFor(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
 for(let seed=1;seed<=12;seed++){
   const random=randomFor(seed),elements=new Map();
@@ -38,11 +38,15 @@ for(let seed=1;seed<=12;seed++){
   assert.equal(vm.runInContext('match.plays',sandbox),0,'Waiting for a call must not consume a down');
   element('pause').onclick();element('callPlay').onclick();assert.equal(vm.runInContext('match.plays',sandbox),0,'Paused coach mode must not snap');element('pause').onclick();
   if(seed%2===0)element('autoMode').onclick();
-  let frames=0,wasReplay=false,wasCelebrating=false,hold=0;
+  let frames=0,wasReplay=false,wasCelebrating=false,hold=0,wasCounter=false,counterFrames=0;
   while(vm.runInContext('running',sandbox)&&frames<12000){
-    if(seed%2===1&&vm.runInContext('waiting',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall',sandbox);element('callPlay').onclick();}
+    if(seed%2===1&&vm.runInContext('waiting',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall;selectedDefense=Object.keys(PokeSim.defenseCalls)[match.plays%5]',sandbox);if(vm.runInContext('match.team===1',sandbox)){defenseWaits++;assert.match(element('playbookTitle').textContent,/DEFENSIVE/);const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.06)',sandbox);assert.equal(vm.runInContext('match.plays',sandbox),plays);if(!vm.runInContext('match.down===4&&match.ball<92',sandbox))assert.match(element('coachAdvice').textContent,/counters/)}element('callPlay').onclick();}
     const callback=nextFrame;nextFrame=null;
     callback(++frames*60);
+    const counter=vm.runInContext('counterHold>0',sandbox);
+    if(counter){counterFrames++;if(!wasCounter)counterCount++;assert.match(element('actionCall').textContent,/COUNTER! −[5-9]|COUNTER! −10/);assert.equal(element('ultimateCall').hidden,false);}
+    if(!counter&&wasCounter){assert.ok(counterFrames>=21,'Counter hit gets a real-time hold at 4×');counterFrames=0;}
+    wasCounter=counter;
     const celebrating=vm.runInContext('!!celebration',sandbox);
     if(celebrating){assert.equal(element('scoreMoment').hidden,false);hold++;heldFrames++;if(!wasCelebrating)celebrationCount++;}
     if(!celebrating&&wasCelebrating){assert.ok(hold>=53,'Scoring holds for 3.2 real seconds even at 4×');hold=0;assert.equal(element('scoreMoment').hidden,true)}
@@ -72,6 +76,6 @@ for(let seed=1;seed<=12;seed++){
   }
 }
 for(const kind of ['ready','set','hike','snap','throw','catch','hit','kick','cheer','whistle','ultimate'])assert.ok(heard.has(kind),`Full games must trigger ${kind} effects`);
-assert.ok(celebrationCount>0&&heldFrames>0);
+assert.ok(celebrationCount>0&&heldFrames>0);assert.ok(counterCount>0&&defenseWaits>0);
 assert.ok(replayCount>0,'The renderer test must exercise highlight transitions');
-console.log(`PASS: 12 complete drafted games in Coach and Auto modes through the horizontal rendering loop, ${celebrationCount} real-time score celebrations, TD/FG/safety final-play and reduced-effects holds, ${replayCount} highlight replays and ${ellipseCount} finite, non-negative canvas ellipses.`);
+console.log(`PASS: 12 complete drafted games in Coach and Auto modes through the horizontal rendering loop, ${counterCount} ultimate counter holds and ${defenseWaits} defensive coaching calls, ${celebrationCount} real-time score celebrations, TD/FG/safety final-play and reduced-effects holds, ${replayCount} highlight replays and ${ellipseCount} finite, non-negative canvas ellipses.`);
