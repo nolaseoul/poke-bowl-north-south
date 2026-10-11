@@ -2,11 +2,13 @@
 
 A horizontal Pokémon football game for desktop and mobile browsers. Call the plays, then watch your Pokémon execute automatically.
 
-**[Play the public game](https://poke-bowl-north-south.freshcut-revival.workers.dev/)** · **[Project board](https://github.com/users/nolaseoul/projects/1)**
+**[Play the public game](https://www.pokeball.gg/)** · **[Project board](https://github.com/users/nolaseoul/projects/1)**
 
 ## Watch a match
 
-A new browser automatically gets **22 unique starters from the 151 Kanto species**, with randomized picks for every offensive and defensive position. Swap any starter, select **RE-DRAFT** for a fresh team, or use **AUTO DRAFT** to fill an incomplete lineup. Select **LOCK LINEUP & KICK OFF** to start. The computer drafts a separate roster from the Pokémon you leave behind. Your lineup is saved on this browser.
+Select **PLAY NOW** to choose your saved team, reroll a Quick Draft, or play as one of eight gym clubs. Then choose a CPU rival: Brock’s Pewter Boulders, Misty’s Cerulean Current, Lt. Surge’s Vermilion Voltage, Erika’s Celadon Blossoms, Koga’s Fuchsia Venom, Sabrina’s Saffron Psychics, Blaine’s Cinnabar Flare, or Giovanni’s Viridian Titans. Cards show the actual starting roster’s OVR, offense/defense ratings, signature players and difficulty. Scout all 22 starters before kickoff. Each club has a stable, unique lineup; opposing clubs can field the same species. CPU clubs favor different play calls (power runs, deep passes, play action or blitzes). Rocket Red remains available for a fresh random opponent. Your chosen roster, team name and rival preference save on this device. **BUILD MY TEAM** keeps the full custom draft available.
+
+A new browser automatically gets **22 unique starters from the 151 Kanto species**, with randomized picks for every offensive and defensive position. Swap any starter, select **RE-DRAFT** for a fresh team, or use **AUTO DRAFT** to fill an incomplete lineup. Select **CHOOSE RIVAL & KICK OFF** to pick the opponent and start. The computer drafts a separate roster from the Pokémon you leave behind. Your lineup is saved on this browser.
 
 **Coach mode** waits for your offensive and defensive play calls. Choose Inside Run, Quick Pass, Deep Pass, Play Action, or Outside Run, preview the routes, then select **CALL PLAY**. Your team passes, runs, blocks, and defends automatically. Rocket Red calls its own plays. On defense, predict its hidden offensive play with Gap Blitz (Inside Run), Press Blitz (Quick Pass), Deep Trap (Deep Pass), QB Spy (Play Action), or Edge Blitz (Outside Run), then select **CALL DEFENSE**. A correct counter triggers exactly one ready defender’s signature ultimate on the opposing QB, sacks them for a uniformly random **5–10-yard loss**, and spends that defender’s once-per-set charge. Wrong reads play out normally. If every defender’s ultimate is spent, the read cannot trigger a special until the next set of downs. A hit in the offense’s end zone becomes a safety. The CPU chooses counters independently under the same rules; it cannot inspect your selected offense. Special teams handle punts and field goals on fourth down and cannot be ultimate-countered.
 
@@ -26,7 +28,7 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - The stadium title menu leads into drafting, friends and world standings. All 151 Pokémon have detailed selection and ultimate portraits. [Presentation notes](docs/stadium-presentation.md) document the source assets, facing correction and new original 130 BPM brass/drumline football score.
 - Field players are larger for recognizable silhouettes. All 151 species use real eight-direction PMDCollab sprite sheets, with idle, movement, action and hurt animations. Players face their travel direction, including diagonals, and turn on possession changes. See [animation credits](dist/sprite-credits.html) and the bundled license.
 
-Version 1.0 simulates matches against the computer. Country selection and guest play are available. The account system supports email/password and Google sign-in; enabling those providers requires the separate Auth project setup in [docs/accounts.md](docs/accounts.md). Signed-in profiles and server-verified match records use a shared Cloudflare D1 leaderboard. Guest results are never recorded. Friend-versus-friend play is planned for a later version.
+Version 1.0 simulates matches against the computer. Country selection and guest play are available. The account system supports email/password and Google sign-in; enabling those providers requires the separate Auth project setup in [docs/accounts.md](docs/accounts.md). Signed-in profiles and server-verified match records use a shared Cloudflare D1 leaderboard. Guest results are never recorded. Private friend-versus-friend duels are available through an invite link.
 
 ## Run locally
 
@@ -49,6 +51,7 @@ node tests/defense.cjs
 node tests/motion.cjs
 node tests/music.cjs
 node tests/draft.cjs
+node tests/teams.cjs
 node tests/render.cjs
 node tests/playbook.cjs
 node tests/stadium.cjs
@@ -73,6 +76,8 @@ The checks cover full-game termination and reconciled box scores across 500 game
 | `dist/sim.js` | Roster, ratings, outcomes, and match statistics |
 | `dist/kanto.js` | Bundled traits for all 151 Kanto species |
 | `dist/draft.js` | Position projections, unique picks, Auto Draft, and computer rosters |
+| `dist/teams.js` | Gym club rosters, actual ratings and CPU strategy metadata |
+| `dist/team-picker.js` | Two-step team/rival selection, previews and draft integration |
 | `dist/draft-ui.js` | Draft interface and local lineup persistence |
 | `scripts/build-kanto.py` | Regenerate species traits from PokeAPI CSV tables |
 | `dist/motion.js` | Play choreography, route plans, and animation frames |

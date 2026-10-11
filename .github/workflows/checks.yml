@@ -19,6 +19,8 @@ jobs:
         run: node tests/game.cjs
       - name: Validate drafting and distinct team matchups
         run: node tests/draft.cjs
+      - name: Validate gym clubs, opponent strategies and verified matches
+        run: node tests/teams.cjs
       - name: Validate signature ultimates and recharge rules
         run: node tests/ultimates.cjs
       - name: Validate defensive counters and QB ultimate hits

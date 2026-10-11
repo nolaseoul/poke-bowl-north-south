@@ -47,18 +47,18 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
   }
   if(path==='/api/matches'&&method==='POST'){
    if(!await profile(env.LEAGUE,userId))fail('Choose your name and country first.',409);
-   const data=await body(request),seed=crypto.getRandomValues(new Uint32Array(1))[0];teams(data.lineup,seed);
-   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup) VALUES(?,?,?,?)').bind(id,userId,seed,JSON.stringify(data.lineup)).run();return json({id,seed,owner:userId},201);
+   const data=await body(request),seed=crypto.getRandomValues(new Uint32Array(1))[0];const opponent=data.opponent??'random';teams(data.lineup,seed,opponent);
+   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup,opponent) VALUES(?,?,?,?,?)').bind(id,userId,seed,JSON.stringify(data.lineup),opponent).run();return json({id,seed,opponent,owner:userId},201);
   }
   const finish=path.match(/^\/api\/matches\/([a-f0-9-]{36})\/finish$/);
   if(finish&&method==='POST'){
    const stored=await env.LEAGUE.prepare('SELECT * FROM matches WHERE id=? AND user_id=?').bind(finish[1],userId).first();if(!stored)fail('Match not found.',404);
    if(stored.completed_at)return json({saved:true,profile:await profile(env.LEAGUE,userId)});
-   const data=await body(request),match=replay(JSON.parse(stored.lineup),stored.seed,data.calls);
+   const data=await body(request),match=replay(JSON.parse(stored.lineup),stored.seed,data.calls,stored.opponent);
    if(!Array.isArray(data.score)||data.score.length!==2||data.score.some((n,i)=>n!==match.score[i]))fail('The match result could not be verified.');
    await env.LEAGUE.prepare("UPDATE matches SET completed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),points_for=?,points_against=?,plays=? WHERE id=? AND user_id=? AND completed_at IS NULL").bind(...match.score,match.plays,stored.id,userId).run();return json({saved:true,profile:await profile(env.LEAGUE,userId)});
   }
   fail('Not found.',404);
- }catch(error){const validation=/Pokémon|history|Finish the match/.test(error.message);if(!error.status&&!validation)console.error('League request failed',error.name);return json({error:(error.status||validation)?error.message:'Could not complete that request. Please try again.'},error.status||(validation?400:500))}
+ }catch(error){const validation=/Pokémon|history|Finish the match|valid opponent/.test(error.message);if(!error.status&&!validation)console.error('League request failed',error.name);return json({error:(error.status||validation)?error.message:'Could not complete that request. Please try again.'},error.status||(validation?400:500))}
 }}
 export default {fetch:createHandler()};

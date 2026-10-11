@@ -6,6 +6,7 @@ import rules from '../dist/league.js';
 import draft from '../dist/draft.js';
 import sim from '../dist/sim.js';
 const sql=new DatabaseSync(':memory:');sql.exec(readFileSync(new URL('../migrations/0001_league.sql',import.meta.url),'utf8'));
+sql.exec(readFileSync(new URL('../migrations/0002_match_opponents.sql',import.meta.url),'utf8'));
 const db={
  prepare(query){
   return {bind(...args){
@@ -50,5 +51,15 @@ await request('profile','PATCH',{name:'Updated Coach',country:'GB'});assert.equa
 assert.equal((await request('leaderboard?country=GB','GET',undefined,null)).data.players[0].name,'Updated Coach');assert.equal((await request('leaderboard?country=JP')).data.players.length,0);
 assert.equal((await request('leaderboard?country=ZZ')).status,400);
 for(let seed=1;seed<=50;seed++){const teams=rules.teams(ids,seed),m=new sim.Match(rules.random(seed),{teams}),history=[];while(!m.over){const call=m.team===0?Object.keys(sim.calls)[m.plays%5]:null;history.push(call);m.next(call)}const verified=rules.replay(ids,seed,history);assert.deepEqual(verified.score,m.score);assert.deepEqual(verified.stats,m.stats)}
+assert.equal((await request('matches','POST',{lineup:ids,opponent:'fake-club'})).status,400);
+for(const opponent of ['pewter','cerulean','vermilion','celadon','fuchsia','saffron','cinnabar','viridian']){
+ const createdMatch=await request('matches','POST',{lineup:ids,opponent});assert.equal(createdMatch.status,201);const selected=createdMatch.data;assert.equal(selected.opponent,opponent);
+ const {default:clubs}=await import('../dist/teams.js');
+ const game=new sim.Match(rules.random(selected.seed),{teams:rules.teams(ids,selected.seed,opponent),...clubs.options(opponent)}),history=[];
+ while(!game.over){history.push(null);game.next()}
+ const result=await request('matches/'+selected.id+'/finish','POST',{calls:history,score:game.score,opponent:'random'});
+ assert.equal(result.status,200,'Selected club must be persisted and replayed; finish payload cannot switch rivals');
+ assert.equal(sql.prepare('SELECT opponent FROM matches WHERE id=?').get(selected.id).opponent,opponent);
+}
 const unconfigured=await handler(new Request('https://bowl.test/api/profile'),{...env,SUPABASE_URL:''});assert.equal(unconfigured.status,503);
-console.log('PASS: 50 deterministic ranked games, session verification, guest exclusion, account isolation, country profiles, persistent SQL standings, forged score rejection, completed-only saving and idempotent retries.');sql.close();
+console.log('PASS: 50 deterministic ranked games and eight persisted gym matchups, session verification, guest exclusion, account isolation, country profiles, persistent SQL standings, forged score rejection, completed-only saving and idempotent retries.');sql.close();

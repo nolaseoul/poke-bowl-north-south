@@ -45,6 +45,7 @@ node tests/game.cjs
 node tests/motion.cjs
 node tests/music.cjs
 node tests/draft.cjs
+node tests/teams.cjs
 node tests/render.cjs
 node tests/playbook.cjs
 node tests/stadium.cjs
@@ -62,7 +63,8 @@ npx wrangler@4.149.0 deploy --config wrangler.jsonc
 Use `npx wrangler@4.149.0 login` if the Cloudflare CLI session has expired.
 Select the intended account if prompted. Preserve the existing D1 database ID;
 do not create another database for each release. Migrations run before deploying
-code that depends on their tables.
+code that depends on their tables. `0002_match_opponents.sql` stores each ranked
+match’s chosen gym rival; existing tickets continue to use random opponents.
 
 Set `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `GOOGLE_ENABLED` as Worker
 variables after the managed Auth project/providers are configured. Their purpose

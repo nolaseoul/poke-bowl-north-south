@@ -32,7 +32,7 @@
     $('defenseCount').textContent=draft.ids.slice(11).filter(id=>id!==null).length+'/11';
     $('draftReady').textContent=summary.count===22?'Your 22 are ready. Time to meet your rival.':`${22-summary.count} starting position${summary.count===21?'':'s'} to fill.`;
     $('draftLaunch').disabled=summary.count!==22;
-    $('draftLaunch').innerHTML=summary.count===22?'LOCK LINEUP & KICK OFF <span>→</span>':`FILL ${22-summary.count} MORE POSITION${summary.count===21?'':'S'} <span>→</span>`;
+    $('draftLaunch').innerHTML=summary.count===22?'CHOOSE RIVAL & KICK OFF <span>→</span>':`FILL ${22-summary.count} MORE POSITION${summary.count===21?'':'S'} <span>→</span>`;
     $('clearDraft').textContent=undoClear?'UNDO CLEAR':'CLEAR LINEUP';
     $('autoDraft').textContent=summary.count===22?'RE-DRAFT ↻':'AUTO DRAFT ↗';
   }
@@ -69,7 +69,17 @@
   ['draftSearch','draftType','draftSort'].forEach(id=>$(id).addEventListener(id==='draftSearch'?'input':'change',()=>{limit=24;renderMarket()}));
   $('autoDraft').onclick=()=>{if(draft.summary().count===22){draft.ids=Array(22).fill(null);selected=0;draftSide='offense';$('draftSearch').value='';$('draftType').value='all';}draft.autoFill();undoClear=null;save();render();announce('Your lineup is complete. Swap any starter, or lock your 22 and kick off.');};
   $('clearDraft').onclick=()=>{if(undoClear){draft.ids=undoClear;undoClear=null;announce('Your lineup is restored.')}else{undoClear=draft.ids.slice();draft.ids=Array(22).fill(null);selected=0;draftSide='offense';announce('Lineup cleared. Use Undo Clear to restore it.');}save();render()};
-  $('draftLaunch').onclick=async()=>{if(draft.summary().count!==22)return;save();$('draftLaunch').disabled=true;announce('Preparing your matchup…');const started=await window.startDraftedMatch(draft.roster(),draft.opponent(),PokeTeamName.save(localStorage,teamInput.value));if(started){hasMatch=true;showMatch()}renderSummary();};
+  async function kickoff(opponent='random'){
+    if(draft.summary().count!==22)return false;save();$('draftLaunch').disabled=true;announce('Preparing your matchup…');
+    const red=opponent==='random'?draft.opponent():PokeTeams.roster(opponent);
+    const started=await window.startDraftedMatch(draft.roster(),red,PokeTeamName.save(localStorage,teamInput.value),opponent);
+    if(started){hasMatch=true;showMatch()}renderSummary();return started;
+  }
+  window.PokeDraftUI={ids:()=>draft.ids.slice(),name:()=>PokeTeamName.name(teamInput.value),show:showDraft,kickoff,load(ids,name){
+    if(!PokeDraft.valid(ids)||ids.includes(null))throw Error('Choose a complete team.');
+    draft.ids=ids.slice();teamInput.value=PokeTeamName.save(localStorage,name);teamIdentity();undoClear=null;save();selected=0;draftSide='offense';render();
+  }};
+  $('draftLaunch').onclick=()=>PokeTeamPicker.open('rival');
   PokeSocial.setup({ids:()=>draft.ids.slice(),name:()=>PokeTeamName.name(teamInput.value),showMatch:()=>{hasMatch=true;showMatch()},importTeam:team=>{draft.ids=team.ids.slice();teamInput.value=PokeTeamName.save(localStorage,team.name);teamIdentity();save();selected=0;draftSide='offense';render()}});
   showDraft();
   if(autoPicked){save();announce('Your offense and defense are auto-picked. Swap any starter, or lock your lineup and kick off.');}else announce('Your saved lineup is ready. Swap any starter, or kick off.');
