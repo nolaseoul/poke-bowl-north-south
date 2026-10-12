@@ -103,6 +103,24 @@ function scoreStep(track,step,tick){
  if(s===0&&bar%8===0)add(49,.85,'crash',.16,.2,.15);
  return events;
 }
+// Original major-key score stingers, counted in beats so they stay at 130 BPM.
+function celebrationScore(kind='touchdown'){
+ if(kind===true)kind='final';if(kind===false)kind='touchdown';
+ const beat=60/130,events=[],add=(at,note,length,instrument,gain,pan=0,wet=.12)=>events.push({at:at*beat,note,duration:length*beat,instrument,gain,pan,wet});
+ const melodies={touchdown:[[0,74,.45],[.5,78,.45],[1,81,.8],[2,86,.7],[3,83,.45],[3.5,81,.4],[4,83,.9],[5,86,.9],[6,90,1.65]],extraPoint:[[0,78,.4],[.5,81,.4],[1,86,.65],[2,90,1.4]],twoPoint:[[0,74,.4],[.5,78,.4],[1,81,.4],[1.5,86,.4],[2,83,.7],[3,86,.7],[4,90,1.6]],fieldGoal:[[0,74,.4],[.5,78,.4],[1,81,.8],[2,86,1.4]],final:[[0,74,.4],[.5,78,.4],[1,81,.8],[2,86,.8],[3,90,.8],[4,93,2.4]]};
+ const melody=melodies[kind]||melodies.touchdown,end=Math.max(...melody.map(([at,,length])=>at+length));
+ for(const [at,note,length] of melody){add(at,note,length,'brass',.23,-.22,.16);add(at,note-12,length*.9,'keys',.1,.22,.2);if(at>=2)add(at,note+12,length*.65,'bell',.075,.5,.22);}
+ for(let b=0;b<end;b++){
+  const root=b<2?50:b<4?55:50;
+  add(b,root-12,.8,'bass',.34);add(b,36,.6,'kick',.5);
+  if(b%2){add(b,40,.4,'snare',.34,-.12);add(b+.5,40,.2,'snare',.13,.12);}
+  else [0,4,7].forEach((n,i)=>add(b,root+n,.85,'guitar',.075,i*.4-.4,.06));
+  add(b+.5,42,.2,'hat',.08,.35,.02);
+ }
+ [0,4,7,12].forEach((n,i)=>add(0,62+n,end,'pad',.04,i%2?.55:-.55,.25));
+ add(0,49,2,'crash',.17,.25,.2);
+ return{kind,events,duration:end*beat+.25};
+}
 class ChipMusic{
  constructor(){this.context=null;this.master=null;this.track='football';this.volume=.35;this.enabled=false;this.step=0;this.nextTime=0;this.timer=null;this.voices=new Set();this.duckUntil=0;this.onChange=()=>{};this.revision=0;this.cache=new Map();this.buses=[];}
  async prepare(){
@@ -128,8 +146,14 @@ class ChipMusic{
   this.voices.add(source);source.onended=()=>{this.voices.delete(source);source.disconnect();gain.disconnect();stereo.disconnect();send.disconnect()};source.start(time);source.stop(time+buffer.duration+.01);
  }
  schedule(){if(!this.enabled||this.context.state!=='running')return;const tick=60/tracks[this.track].bpm/4;if(this.nextTime<this.context.currentTime-.15)this.nextTime=this.context.currentTime+.025;let count=0;while(this.nextTime<this.context.currentTime+.12&&count++<12){this.noteStep(this.step++,this.nextTime,tick);this.nextTime+=tick}}
- noteStep(step,time,tick){const duck=time<this.duckUntil?.4:1;scoreStep(tracks[this.track],step,tick).forEach(e=>this.tone(e.note,time+e.offset,e.duration,e.instrument,e.gain*duck,e.pan,e.wet));}
- celebrate(final=false){if(!this.enabled||!this.context)return;const at=this.context.currentTime+.02;this.duckUntil=at+1.5;const phrase=final?[79,83,86,88,86,91]:[76,79,83,86,88];phrase.forEach((note,i)=>{this.tone(note,at+i*.12,i===phrase.length-1?.65:.15,'brass',.2,-.15,.28);this.tone(note-12,at+i*.12,.25,'bell',.12,.3,.3)});[48,52,55,59].forEach((n,i)=>this.tone(n,at,.95,'keys',.1,i*.2-.3,.35));this.tone(49,at,1,'crash',.16,.15,.3)}
+ noteStep(step,time,tick){const duck=time<this.duckUntil?.18:1;scoreStep(tracks[this.track],step,tick).forEach(e=>this.tone(e.note,time+e.offset,e.duration,e.instrument,e.gain*duck,e.pan,e.wet));}
+ celebrate(kind='touchdown'){
+  if(!this.enabled||!this.context)return;
+  const score=celebrationScore(kind),at=this.context.currentTime+.45;
+  this.duckUntil=Math.max(this.duckUntil,at+score.duration);
+  for(const e of score.events)this.tone(e.note,at+e.at,e.duration,e.instrument,e.gain,e.pan,e.wet);
+ }
+
 }
-root.PokeMusic={ChipMusic,tracks,patch,scoreStep,RATE};if(typeof module!=='undefined')module.exports=root.PokeMusic;
+root.PokeMusic={ChipMusic,tracks,patch,scoreStep,celebrationScore,RATE};if(typeof module!=='undefined')module.exports=root.PokeMusic;
 })(typeof window!=='undefined'?window:globalThis);

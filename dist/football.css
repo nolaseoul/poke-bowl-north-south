@@ -12,3 +12,14 @@
 .accuracy .meter-labels{grid-column:3;grid-row:1;display:flex;flex-direction:column;align-items:flex-start;align-self:stretch;justify-content:space-between;margin:0}
 .accuracy .football-meter button{grid-column:1/-1;grid-row:2}
 @media(max-width:600px){.accuracy .meter-rail{height:78px}.accuracy .football-meter{gap:8px;margin-top:8px}.accuracy.football-step{padding:12px}.accuracy .meter-rail i{height:4px}}
+
+/* Original pixel official. Four poses share one transparent atlas. */
+.referee-sprite{display:block;flex:0 0 auto;width:112px;height:112px;background-image:url('assets/stadium-referee-v1.webp');background-repeat:no-repeat;background-size:400% 100%;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #081a2860)}
+.referee-coin{background-position:0 0}.referee-touchdown{background-position:33.3333% 0}.referee-good{background-position:66.6667% 0}.referee-miss{background-position:100% 0}
+.referee-call{position:absolute;z-index:8;right:14px;top:12%;display:flex;align-items:center;gap:8px;max-width:48%;padding:5px 13px 5px 3px;border:2px solid #ffdf52;border-radius:12px;background:linear-gradient(135deg,#132a43f5,#28315af5);box-shadow:0 8px 24px #0006;pointer-events:none;animation:official-enter .22s ease-out}
+.referee-call[hidden],.toss-official[hidden]{display:none!important}.referee-call small{display:block;color:#ffdf52;font:800 9px monospace;letter-spacing:1px;margin-bottom:4px}.referee-call strong{display:block;color:#fff6b4;font:900 27px/.95 'Barlow Condensed',sans-serif;text-shadow:2px 2px #0a1225}
+.referee-call .referee-sprite{animation:official-cheer .4s ease-in-out 6 alternate}.toss-official{display:flex;align-items:center;justify-content:center;gap:8px;margin:-9px 0 8px}.toss-official .referee-sprite{width:80px;height:80px}.toss-official b{max-width:90px;text-align:left;color:#b9d5f8;font:800 10px/1.5 monospace;letter-spacing:1px}
+@keyframes official-enter{from{opacity:0;translate:16px 0}to{opacity:1;translate:0 0}}@keyframes official-cheer{to{transform:translateY(-5px) rotate(2deg)}}
+.paused .referee-sprite,.paused.football-step .football-coin,.referee-call.paused{animation-play-state:paused}.reduced .referee-sprite{animation:none}
+@media(max-width:680px){.referee-call{top:13%;right:7px;gap:4px;padding:3px 8px 3px 0;max-width:48%;border-radius:7px}.referee-call .referee-sprite{width:60px;height:60px}.referee-call small{font-size:6px;letter-spacing:0}.referee-call strong{font-size:17px}.toss-official{margin:-4px 0 4px}.toss-official .referee-sprite{width:49px;height:49px}.toss-official b{font-size:7px;max-width:80px}.football-step:has(.toss-official:not([hidden])) .football-coin{position:absolute;left:calc(50% - 57px);top:35px;width:22px;height:22px;font-size:14px;line-height:14px;border-width:2px;margin:0}}
+@media(prefers-reduced-motion:reduce){.referee-call,.referee-call .referee-sprite{animation:none}}

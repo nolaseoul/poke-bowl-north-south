@@ -3,7 +3,9 @@
 'use strict';
 const RATE=32000,TAU=Math.PI*2;
 const cadence=Object.freeze(['ready','set','hut','hike']);
-const durations={ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.72,charge:.3};
+const announcements=Object.freeze(['touchdown','good','twoPoint','noGood','coinToss','heads','tails']);
+const voiceClips=Object.freeze([...cadence,...announcements]);
+const durations={touchdown:1,good:.75,twoPoint:.9,noGood:.7,coinToss:1,heads:.5,tails:.5,ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.72,charge:.3};
 function effect(kind,rate=RATE){
  const duration=durations[kind];if(!duration)return new Float32Array(0);
  const out=new Float32Array(Math.ceil(duration*rate));let seed=719,phase=0,low=0;
@@ -39,8 +41,8 @@ function cuesBetween(m,e,from,to,replay=false){
  return cues.sort((a,b)=>a.at-b.at);
 }
 class FieldFX{
- constructor(){this.context=null;this.master=null;this.enabled=true;this.voices=new Set();this.cache=new Map();this.clips=new Map();this.loading=null;this.assets=null;}
- preload(){if(!this.assets&&root.fetch)this.assets=Promise.all(cadence.map(async kind=>{try{const response=await root.fetch(`assets/fx-${kind}.wav`);if(!response.ok)return null;return[kind,await response.arrayBuffer()]}catch{return null}}));return this.assets;}
+ constructor(){this.context=null;this.master=null;this.enabled=true;this.voices=new Set();this.cache=new Map();this.clips=new Map();this.loading=null;this.assets=null;this.revision=0;}
+ preload(){if(!this.assets&&root.fetch)this.assets=Promise.all(voiceClips.map(async kind=>{try{const response=await root.fetch(`assets/fx-${kind}.wav`);if(!response.ok)return null;return[kind,await response.arrayBuffer()]}catch{return null}}));return this.assets;}
  async prepare(){
   if(!this.enabled)return;
   if(!this.context){const Audio=root.AudioContext||root.webkitAudioContext;if(!Audio)return;const c=this.context=new Audio();this.master=c.createGain();this.master.gain.value=.62;const limiter=c.createDynamicsCompressor();limiter.threshold.value=-9;limiter.knee.value=6;limiter.ratio.value=5;limiter.attack.value=.003;limiter.release.value=.12;this.master.connect(limiter);limiter.connect(c.destination);}
@@ -48,13 +50,14 @@ class FieldFX{
   if(!this.loading){this.loading=Promise.resolve(this.preload()).then(async assets=>{for(const item of assets||[]){if(!item)continue;try{this.clips.set(item[0],await this.context.decodeAudioData(item[1]))}catch{}}});}
   await this.loading;
  }
+ async announce(kind){const revision=this.revision;try{await this.prepare();if(revision===this.revision)this.play(kind)}catch{}}
  play(kind,replay=false){
   const c=this.context;if(!this.enabled||!c||c.state!=='running')return;
   let buffer=this.clips.get(kind)||this.cache.get(kind);if(!buffer){const data=effect(kind);if(!data.length)return;buffer=c.createBuffer(1,data.length,RATE);buffer.getChannelData(0).set(data);this.cache.set(kind,buffer);}
-  const source=c.createBufferSource(),gain=c.createGain();source.buffer=buffer;gain.gain.value=(cadence.includes(kind)?.9:kind==='hit'?.85:kind==='cheer'?.5:.68)*(replay?.65:1);source.connect(gain);gain.connect(this.master);this.voices.add(source);source.onended=()=>{this.voices.delete(source);source.disconnect();gain.disconnect()};source.start(c.currentTime);source.stop(c.currentTime+buffer.duration+.01);
+  const source=c.createBufferSource(),gain=c.createGain();source.buffer=buffer;gain.gain.value=(voiceClips.includes(kind)?.9:kind==='hit'?.85:kind==='cheer'?.5:.68)*(replay?.65:1);source.connect(gain);gain.connect(this.master);this.voices.add(source);source.onended=()=>{this.voices.delete(source);source.disconnect();gain.disconnect()};source.start(c.currentTime);source.stop(c.currentTime+buffer.duration+.01);
  }
- stop(){for(const source of [...this.voices]){try{source.stop()}catch{}}this.voices.clear();}
+ stop(){this.revision++;for(const source of [...this.voices]){try{source.stop()}catch{}}this.voices.clear();}
  setEnabled(value){this.enabled=!!value;if(!this.enabled)this.stop();}
 }
-root.PokeFX={FieldFX,effect,cuesBetween,RATE,cadence};if(typeof module!=='undefined')module.exports=root.PokeFX;
+root.PokeFX={FieldFX,effect,cuesBetween,RATE,cadence,announcements,voiceClips};if(typeof module!=='undefined')module.exports=root.PokeFX;
 })(typeof window!=='undefined'?window:globalThis);

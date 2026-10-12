@@ -11,7 +11,7 @@ const heard=new Set();
 let replayCount=0,ellipseCount=0,celebrationCount=0,heldFrames=0,counterCount=0,defenseWaits=0,powerFrames=0;
 function randomFor(seed){return()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}}
 for(let seed=1;seed<=12;seed++){
-  const random=randomFor(seed),elements=new Map();
+  const random=randomFor(seed),elements=new Map(),musicCalls=[],voiceCalls=[];
   const context2d=new Proxy({
     measureText:text=>({width:text.length*6}),
     ellipse(x,y,rx,ry){assert.ok([x,y,rx,ry].every(Number.isFinite));assert.ok(rx>=0&&ry>=0,'Canvas ellipse radii must be non-negative');ellipseCount++}
@@ -21,8 +21,8 @@ for(let seed=1;seed<=12;seed++){
   const document={hidden:false,getElementById:element,querySelector:()=>element('featured'),querySelectorAll:selector=>selector==='[data-speed]'?speedButtons:[],addEventListener(){}};
   let nextFrame;
   const math=Object.create(Math);math.random=random;
-  class ChipMusic{constructor(){this.volume=.35;this.track='route';this.enabled=false}setVolume(v){this.volume=v}setTrack(v){this.track=v}play(){this.enabled=true;return Promise.resolve()}stop(){this.enabled=false}celebrate(){}}
-  class FieldFX{preload(){}setEnabled(v){this.enabled=v}prepare(){return Promise.resolve()}stop(){}play(kind){if(this.enabled)heard.add(kind)}}
+  class ChipMusic{constructor(){this.volume=.35;this.track='route';this.enabled=false}setVolume(v){this.volume=v}setTrack(v){this.track=v}play(){this.enabled=true;return Promise.resolve()}stop(){this.enabled=false}celebrate(kind){musicCalls.push(kind)}}
+  class FieldFX{preload(){}setEnabled(v){this.enabled=v}prepare(){return Promise.resolve()}stop(){}announce(kind){voiceCalls.push(kind);this.play(kind)}play(kind){if(this.enabled)heard.add(kind)}}
   const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeTeamName:require('../dist/team-name.js'),PokePvP:require('../dist/pvp-client.js'),PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
   vm.createContext(sandbox);
   sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
@@ -70,6 +70,21 @@ for(let seed=1;seed<=12;seed++){
    const meter1=element('meterNeedle').style.top;assert.notEqual(meter1,'0%');assert.equal(element('meterNeedle').style.left,'-10px','PAT arrow moves vertically');
    element('pause').onclick();const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.5)',sandbox);element('meterStop').onclick();assert.equal(vm.runInContext('match.plays',sandbox),plays);assert.equal(element('meterNeedle').style.top,meter1,'Pause freezes the meter and rejects kicks');
    element('pause').onclick();vm.runInContext('speed=4;update(.2)',sandbox);const at4=vm.runInContext('meterValue(meterTime)',sandbox);assert.ok(Math.abs(at4-.38)<.00001,'Meter speed stays real time at 4x');element('meterStop').onclick();assert.equal(vm.runInContext('event.accuracy',sandbox),at4,'Stopped arrow determines actual kick result');
+  }
+  if(seed===1)for(const outcome of ['touchdown','extraPoint','twoPoint','fieldGoal','miss','stopped']){
+   sandbox.outcome=outcome;
+   const countMusic=musicCalls.length,countVoice=voiceCalls.length;
+   vm.runInContext(`clearMoment();match=new Match(()=>.5,{teams:squads});running=true;waiting=false;paused=false;replaying=false;speed=4;event={team:0,start:95,end:100,gain:5,first:100,down:1,quarter:4,clock:40,scoreBefore:[0,0],type:['extraPoint','fieldGoal','miss'].includes(outcome)?'kick':'run',playCall:'inside',qb:squads[0].find(p=>p.pos==='QB').id,target:squads[0].find(p=>p.pos==='HB').id,defender:squads[1].find(p=>p.pos==='ILB').id,score:outcome==='touchdown'?6:outcome==='extraPoint'?1:outcome==='twoPoint'?2:outcome==='fieldGoal'?3:0,touchdown:outcome==='touchdown',extraPoint:outcome==='extraPoint'||outcome==='miss',conversion:outcome==='twoPoint'||outcome==='stopped',text:'Official test'};formation();phase=motion.resolveAt-.01;update(.02);`,sandbox);
+   assert.equal(element('refereeCall').hidden,false,'Every scoring or failed conversion result gets a signal');
+   const failed=['miss','stopped'].includes(outcome);
+   assert.match(element('refereeCall').innerHTML,new RegExp('referee-'+(failed?'miss':['touchdown','twoPoint'].includes(outcome)?'touchdown':'good')));
+   assert.equal(voiceCalls.at(-1),failed?'noGood':outcome==='touchdown'?'touchdown':outcome==='twoPoint'?'twoPoint':'good');
+   assert.equal(voiceCalls.length,countVoice+1);assert.equal(musicCalls.length,countMusic+(failed?0:1),'Misses must never play victory music');
+   if(!failed)assert.equal(musicCalls.at(-1),outcome);
+   const timer=vm.runInContext('refereeTime',sandbox);vm.runInContext('paused=true;update(1)',sandbox);assert.equal(vm.runInContext('refereeTime',sandbox),timer);
+   if(failed){vm.runInContext('paused=false;update(.06)',sandbox);assert.ok(vm.runInContext('officialHold>2',sandbox),'A missed call holds at real-time speed even at 4x');}
+   vm.runInContext('clearMoment();paused=false;replaying=true;phase=motion.resolveAt-.01;update(.02)',sandbox);
+   assert.equal(voiceCalls.length,countVoice+1,'Highlight must not repeat the official voice');assert.equal(musicCalls.length,countMusic+(failed?0:1),'Highlight must not repeat the stinger');
   }
   if(seed===1)for(const scenario of ['td','fg','safety'])for(const reduced of [false,true]){
    // Exercise each scoring type on the final play, including reduced effects and pause.

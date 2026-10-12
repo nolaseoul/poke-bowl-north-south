@@ -15,3 +15,11 @@ distorted plucked power chords, staccato octave bass, sharp harmonized leads,
 fast arpeggios and tom/snare fills. Guitar and tom PCM patches expand the
 palette to thirteen instruments. Playback tempo remains 130 BPM at every
 simulation speed. The internal track IDs remain compatible with saved choices.
+
+## Scoring and the stadium referee
+
+Touchdowns, extra points, two-point conversions and field goals each have an original major-key victory hook at 130 BPM. `celebrationScore()` in `dist/music.js` arranges brass, bells, keys, guitar, pad, bass and stadium drums. The touchdown hook lasts about 3.8 seconds; conversion hooks are shorter. Music ducks underneath the stinger, which starts 0.45 seconds after the call so the voice has room. Stingers follow the music toggle and volume slider.
+
+Seven original creature-style referee voice clips are bundled locally: **Touch! Down!**, **It's good!**, **Two points!**, **No good!**, **Call the toss!**, **Heads!** and **Tails!**. `scripts/build-announcer.py` uses the same installed macOS voice and PCM pipeline as the quarterback cadence, with a lower 1.42–1.52× repitch to keep the words clear. No game recordings or external voice service are used. Referee speech follows the separate FX mute control. Deferred decoding is cancelled when a play stops, so an old call cannot spill into a new match.
+
+Calls and stingers fire once when the live result resolves. Highlights do not repeat them. The referee's signal stays visible for 3.2 real seconds; missed kicks and stopped two-point tries hold the broadcast for 2.2 real seconds without playing victory music. Pause freezes the signal and hold. The original red-capped pixel referee hosts the toss and signals touchdowns, successful kicks and failed tries; see `docs/referee-art.md`.
