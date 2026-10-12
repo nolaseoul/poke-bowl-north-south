@@ -21,9 +21,9 @@ default email service is limited to project-team addresses; connecting the
 project alone does not make public signup production-ready. Google stays
 disabled in the game until provider setup and verification are complete.
 
-A **separate Poké Bowl Supabase project** must be selected or created. Do not
-reuse the unrelated SchoolRoads project. Provisioning waits for the owner to
-choose the Supabase organization and confirm any quoted project cost.
+The dedicated project is connected. Keep this game’s users separate from the
+unrelated SchoolRoads and FreshCut projects. Remaining provider setup follows
+the checklist below; do not recreate the project.
 
 1. Enable email/password authentication, keep email confirmation enabled, and
    configure a custom SMTP sender so friends can receive confirmations and
@@ -44,6 +44,29 @@ choose the Supabase organization and confirm any quoted project cost.
 5. Deploy and verify signup with a disposable test email, confirmation, login,
    password recovery, Google redirect/return, and session restoration. Complete
    a signed-in game and check its profile/leaderboard from another browser.
+
+### Provider setup checkpoint — October 12
+
+A dedicated Google Cloud project, **Poke Bowl** (`main-sphere-511417-b7`), was
+created without enabling paid services. Its consent setup is prepared for an
+external audience, but the final Google API Services User Data Policy approval
+is pending. No OAuth client or client secret has been created yet.
+
+Resend sign-in was completed with the owner’s approval of its service terms.
+The dedicated sender domain `auth.pokeball.gg` has been added (Resend domain ID
+`248f3b60-8c27-43c2-9311-1d40cf76b027`). DNS verification is still pending:
+
+- TXT `resend._domainkey.auth`: use the public DKIM value shown in Resend.
+- CNAME `send.auth` → `send.forge.rmta.net` (DNS only).
+- CNAME `rsend.auth` → `rsend.forge.rmta.net` (DNS only).
+
+The Supabase SMTP form is prepared, **not saved**, with sender
+`noreply@auth.pokeball.gg`, name `Poke Bowl`, host `smtp.resend.com`, port `465`,
+and username `resend`. Its password must be a scoped Resend sending key; no key
+has been created or entered. Keep that secret in Supabase, never in this repo.
+The Cloudflare dashboard was stuck on its loading screen during this setup;
+no DNS record was changed. Email confirmation remains required. Google remains
+disabled until provider credentials are saved and real sign-in is verified.
 
 Provider setup references: [password auth](https://supabase.com/docs/guides/auth/passwords),
 [Google auth](https://supabase.com/docs/guides/auth/social-login/auth-google),
