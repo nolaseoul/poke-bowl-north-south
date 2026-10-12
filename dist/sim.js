@@ -68,7 +68,7 @@ const defenseCalls={
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));const avg=a=>a.reduce((s,n)=>s+n,0)/a.length;
 function line(){return{att:0,cmp:0,passYds:0,passTD:0,ints:0,rush:0,rushYds:0,rushTD:0,targets:0,rec:0,recYds:0,recTD:0,tackles:0,sacks:0,picks:0,pressures:0,blocks:0,snaps:0,ultimates:0}}
 class Match{
- constructor(random=Math.random,options={}){this.random=random;this.customTeams=!!options.teams;this.teams=options.teams||[roster,roster];if(this.teams.length!==2||this.teams.some(team=>team.length!==22||new Set(team.map(p=>p.id)).size!==22||Object.entries({QB:1,WR:2,TE:1,HB:1,FB:1,LT:1,LG:1,C:1,RG:1,RT:1,DE:2,NT:1,OLB:2,ILB:2,CB:2,S:2}).some(([pos,n])=>team.filter(p=>p.pos===pos).length!==n)))throw new Error('Each team needs a valid, unique 22-player lineup');this.cpuStyle=options.cpuStyle||null;this.names=options.names||['Kanto Blue','Rocket Red'];this.score=[0,0];this.team=0;this.ball=20;this.first=30;this.down=1;this.quarter=1;this.clock=120;this.over=false;this.plays=0;this.stats=[{},{}];for(let t=0;t<2;t++)for(const p of this.teams[t])this.stats[t][p.id]=line();this.last=null;this.series=1;this.usedUltimates=[new Set(),new Set()];this.activeUltimates=[new Set(),new Set()];}
+ constructor(random=Math.random,options={}){this.random=random;this.customTeams=!!options.teams;this.teams=options.teams||[roster,roster];if(this.teams.length!==2||this.teams.some(team=>team.length!==22||new Set(team.map(p=>p.id)).size!==22||Object.entries({QB:1,WR:2,TE:1,HB:1,FB:1,LT:1,LG:1,C:1,RG:1,RT:1,DE:2,NT:1,OLB:2,ILB:2,CB:2,S:2}).some(([pos,n])=>team.filter(p=>p.pos===pos).length!==n)))throw new Error('Each team needs a valid, unique 22-player lineup');this.footballFlow=options.footballFlow===true;this.phase=this.footballFlow?'coinToss':'scrimmage';this.toss=null;this.openingReceiver=null;this.pendingBoundary=null;this.cpuStyle=options.cpuStyle||null;this.names=options.names||['Kanto Blue','Rocket Red'];this.score=[0,0];this.team=0;this.ball=20;this.first=30;this.down=1;this.quarter=1;this.clock=120;this.over=false;this.plays=0;this.stats=[{},{}];for(let t=0;t<2;t++)for(const p of this.teams[t])this.stats[t][p.id]=line();this.last=null;this.series=1;this.usedUltimates=[new Set(),new Set()];this.activeUltimates=[new Set(),new Set()];}
  ultimateReady(team,id){return !this.usedUltimates[team].has(id)}
  resetUltimates(){this.series++;this.usedUltimates.forEach(set=>set.clear())}
  activate(p,team,e){if(!this.ultimateReady(team,p.id))return;this.usedUltimates[team].add(p.id);this.activeUltimates[team].add(p.id);this.stats[team][p.id].ultimates++;e.ultimates.push({...ultimates.signature(p.id),team,pos:p.pos,boost:ultimates.description(p)})}
@@ -108,5 +108,71 @@ class Match{
  this.plays++;e.text=e.text.replace(/for -([0-9]+)/,'for a loss of $1');this.last=e;return e;
  }
 }
+
+// Version 3 adds explicit dead-ball decisions without changing existing match replays.
+const scrimmageNext=Match.prototype.next;
+Match.prototype.actor=function(){if(this.viewActor!==undefined)return this.viewActor;return this.phase==='coinToss'?0:this.phase==='receive'?this.toss.winner:['kickoff','conversion','pat'].includes(this.phase)?this.team:null};
+Match.prototype.autoAction=function(){
+ switch(this.phase){
+  case 'coinToss':return{type:'toss',choice:'heads'};
+  case 'receive':return{type:'receive',choice:'receive'};
+  case 'conversion':return{type:'conversion',choice:this.quarter===4&&this.score[1-this.team]-this.score[this.team]===2?'two':'pat'};
+  case 'pat':return{type:'pat',accuracy:clamp(.5+(this.r()-.5)*.28,0,1)};
+  case 'kickoff':return{type:'kickoff',power:.68+this.r()*.32};
+  default:return null;
+ }
+};
+Match.prototype.kickoff=function(team){this.phase='kickoff';this.team=team;this.ball=35;this.first=45;this.down=1;this.resetUltimates()};
+Match.prototype.afterConversion=function(team){
+ const boundary=this.pendingBoundary;this.pendingBoundary=null;
+ if(boundary===5){this.clock=0;this.over=true;this.phase='final';return}
+ if(boundary){this.quarter=boundary;this.clock=120}
+ this.kickoff(boundary===3?this.openingReceiver:team);
+};
+Match.prototype.specialEvent=function(type,team){const qb=this.teams[team].find(p=>p.pos==='QB'),fb=this.teams[team].find(p=>p.pos==='FB');return{type,team,start:this.ball,end:this.ball,first:this.first,down:this.down,quarter:this.quarter,clock:this.clock,scoreBefore:this.score.slice(),score:0,gain:0,qb:qb.id,fullback:fb.id,target:qb.id,defender:this.teams[1-team].find(p=>p.pos==='S').id,complete:false,turnover:false,ultimates:[],ultimateState:this.usedUltimates.map(s=>[...s]),text:''}};
+Match.prototype.next=function(call=null,defenseCall=null){
+ if(!this.footballFlow)return scrimmageNext.call(this,call,defenseCall);
+ if(this.over)return null;
+ if(['coinToss','receive','conversion','pat','kickoff'].includes(this.phase)){
+  const a=call===null?this.autoAction():call;
+  if(!a||typeof a!=='object'||Array.isArray(a))throw Error('Choose the current football action.');
+  const expected={coinToss:'toss',receive:'receive',conversion:'conversion',pat:'pat',kickoff:'kickoff'}[this.phase];
+  if(a.type!==expected)throw Error('The football action changed.');
+  const team=this.actor(),e=this.specialEvent(a.type,team);
+  if(this.phase==='coinToss'){
+   if(!['heads','tails'].includes(a.choice))throw Error('Call heads or tails.');
+   const result=this.r()<.5?'heads':'tails',winner=result===a.choice?0:1;this.toss={choice:a.choice,result,winner};this.phase='receive';e.presentation='coin';e.toss={...this.toss};e.text=`${a.choice.toUpperCase()} called. ${result.toUpperCase()}! ${this.names[winner]} wins the toss.`;
+  }else if(this.phase==='receive'){
+   if(!['receive','kick'].includes(a.choice))throw Error('Choose kick or receive.');
+   this.openingReceiver=a.choice==='receive'?team:1-team;this.kickoff(1-this.openingReceiver);e.presentation='setup';e.text=`${this.names[team]} chooses to ${a.choice}. ${this.names[this.openingReceiver]} receives first; ${this.names[1-this.openingReceiver]} receives after halftime.`;
+  }else if(this.phase==='conversion'){
+   if(!['pat','two'].includes(a.choice))throw Error('Choose extra point or two-point conversion.');
+   this.phase=a.choice==='pat'?'pat':'twoPoint';this.ball=a.choice==='pat'?85:98;this.first=100;this.down=1;this.resetUltimates();e.presentation='setup';e.text=a.choice==='pat'?`${this.names[team]} lines up for the extra point.`:`${this.names[team]} goes for two from the 2-yard line!`;
+  }else if(this.phase==='pat'){
+   if(typeof a.accuracy!=='number'||!Number.isFinite(a.accuracy)||a.accuracy<0||a.accuracy>1)throw Error('Invalid kick accuracy.');
+   e.type='kick';e.extraPoint=true;e.accuracy=a.accuracy;e.score=Math.abs(a.accuracy-.5)<=.12?1:0;e.end=100;e.text=e.score?`EXTRA POINT GOOD! ${this.names[team]} adds one.`:`NO GOOD! ${this.names[team]} misses the extra point.`;this.score[team]+=e.score;this.afterConversion(team);
+  }else{
+   if(typeof a.power!=='number'||!Number.isFinite(a.power)||a.power<0||a.power>1)throw Error('Invalid kickoff power.');
+   const receiver=1-team,returner=this.teams[receiver].find(p=>p.pos==='WR'),landing=60+Math.round(a.power*46+this.r()*4),touchback=landing>=100;
+   const returned=touchback?0:Math.round(7+this.r()*12+(returner.ratings.Speed-75)*.1),spot=touchback?25:clamp(100-landing+returned,1,65);
+   e.power=a.power;e.landing=landing;e.touchback=touchback;e.returnYards=returned;e.returner=returner.id;e.target=returner.id;e.receivingTeam=receiver;e.end=100-spot;e.text=touchback?`KICKOFF! ${this.names[team]} boots a touchback. ${this.names[receiver]} starts at its 25.`:`KICKOFF! ${returner.name} returns ${returned} yards. ${this.names[receiver]} starts at its ${spot}.`;
+   this.phase='scrimmage';this.team=receiver;this.ball=spot;this.first=Math.min(100,spot+10);this.down=1;this.resetUltimates();
+  }
+  this.plays++;this.last=e;return e;
+ }
+ if(call!==null&&typeof call!=='string')throw Error('Choose a valid play.');
+ const team=this.team,quarter=this.quarter,clock=this.clock,score=this.score.slice(),tryTwo=this.phase==='twoPoint',stats=tryTwo?structuredClone(this.stats):null;
+ const e=scrimmageNext.call(this,call,defenseCall);
+ if(tryTwo){
+  const good=e.touchdown&&!e.fumble&&!e.interception;this.score=score;this.score[team]+=good?2:0;this.stats=stats;this.quarter=quarter;this.clock=clock;this.over=false;e.touchdown=false;e.conversion=true;e.score=good?2:0;e.safety=false;e.turnover=false;e.text=good?`TWO POINTS! ${this.names[team]} converts with ${this.teams[team].find(p=>p.id===e.target).name}.`:`TWO-POINT TRY STOPPED! ${this.names[1-team]} holds the line.`;this.afterConversion(team);
+ }else if(e.touchdown){
+  this.score[team]--;e.score=6;this.pendingBoundary=this.over?5:this.quarter!==quarter?this.quarter:null;this.over=false;if(this.pendingBoundary){this.quarter=quarter;this.clock=0}this.phase='conversion';this.team=team;this.ball=100;this.first=100;this.down=1;
+ }else if(this.over)this.phase='final';
+ else if(this.quarter===3&&quarter===2)this.kickoff(this.openingReceiver);
+ else if(e.score||e.safety)this.kickoff(team);
+ else this.phase='scrimmage';
+ this.last=e;return e;
+};
+
 root.PokeSim={roster,specs,calls,defenseCalls,Match,ultimates,firstRead,playHand};if(typeof module!=='undefined')module.exports=root.PokeSim;
 })(typeof window!=='undefined'?window:globalThis);

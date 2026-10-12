@@ -43,7 +43,8 @@ for(let seed=1;seed<=12;seed++){
   if(seed%2===0)element('autoMode').onclick();
   let frames=0,wasReplay=false,wasCelebrating=false,hold=0,wasCounter=false,counterFrames=0;
   while(vm.runInContext('running',sandbox)&&frames<12000){
-    if(seed%2===1&&vm.runInContext('waiting',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall;selectedDefense=Object.keys(PokeSim.defenseCalls)[match.plays%5]',sandbox);if(vm.runInContext('match.team===1',sandbox)){defenseWaits++;assert.match(element('playbookTitle').textContent,/DEFENSIVE/);const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.06)',sandbox);assert.equal(vm.runInContext('match.plays',sandbox),plays);if(!vm.runInContext('match.down===4&&match.ball<92',sandbox))assert.match(element('coachAdvice').textContent,/counters/)}element('callPlay').onclick();}
+    if(seed%2===1&&vm.runInContext('waiting&&!!footballMode&&match.actor()===0',sandbox)){vm.runInContext(`submitFootball(match.phase==='coinToss'?{type:'toss',choice:'heads'}:match.phase==='receive'?{type:'receive',choice:'receive'}:match.phase==='conversion'?{type:'conversion',choice:match.plays%2?'pat':'two'}:match.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.9})`,sandbox)}
+    if(seed%2===1&&vm.runInContext('waiting&&!footballMode',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall;selectedDefense=Object.keys(PokeSim.defenseCalls)[match.plays%5]',sandbox);if(vm.runInContext('match.team===1',sandbox)){defenseWaits++;assert.match(element('playbookTitle').textContent,/DEFENSIVE/);const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.06)',sandbox);assert.equal(vm.runInContext('match.plays',sandbox),plays);if(!vm.runInContext('match.down===4&&match.ball<92',sandbox))assert.match(element('coachAdvice').textContent,/counters/)}element('callPlay').onclick();}
     const beforePower=vm.runInContext('(motion.powerCues||[]).some(u=>phase>=u.at&&phase<u.end)&&!celebration&&!counterHold&&!waiting&&!paused',sandbox),beforePhase=vm.runInContext('phase',sandbox);
     const callback=nextFrame;nextFrame=null;
     callback(++frames*60);
@@ -64,13 +65,19 @@ for(let seed=1;seed<=12;seed++){
   assert.equal(vm.runInContext('match.over',sandbox),true);
   assert.match(element('banner').innerHTML,/FINAL WHISTLE/);
   assert.equal(typeof element('again').onclick,'function');
+  if(seed===1){
+   vm.runInContext(`clearMoment();match=new Match(()=>.5,{teams:squads,footballFlow:true});match.phase='pat';match.score=[6,0];match.team=0;match.ball=85;running=true;coaching=true;paused=false;event=null;showFootballStep();speed=1;update(.2);`,sandbox);
+   const meter1=element('meterNeedle').style.top;assert.notEqual(meter1,'0%');assert.equal(element('meterNeedle').style.left,'-10px','PAT arrow moves vertically');
+   element('pause').onclick();const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.5)',sandbox);element('meterStop').onclick();assert.equal(vm.runInContext('match.plays',sandbox),plays);assert.equal(element('meterNeedle').style.top,meter1,'Pause freezes the meter and rejects kicks');
+   element('pause').onclick();vm.runInContext('speed=4;update(.2)',sandbox);const at4=vm.runInContext('meterValue(meterTime)',sandbox);assert.ok(Math.abs(at4-.38)<.00001,'Meter speed stays real time at 4x');element('meterStop').onclick();assert.equal(vm.runInContext('event.accuracy',sandbox),at4,'Stopped arrow determines actual kick result');
+  }
   if(seed===1)for(const scenario of ['td','fg','safety'])for(const reduced of [false,true]){
    // Exercise each scoring type on the final play, including reduced effects and pause.
    sandbox.scenario=scenario;sandbox.reduced=reduced;
    vm.runInContext(`clearMoment();running=true;paused=false;waiting=false;fullEffects=!reduced;replaying=false;replayed=false;speed=4;match.over=true;match.score=[scenario==='td'?7:scenario==='fg'?3:0,scenario==='safety'?2:0];
     event={team:0,start:scenario==='safety'?3:95,end:scenario==='safety'?0:100,gain:scenario==='safety'?-3:5,first:100,down:1,quarter:4,clock:4,scoreBefore:[0,0],type:scenario==='fg'?'kick':'run',playCall:'inside',qb:squads[0].find(p=>p.pos==='QB').id,target:squads[0].find(p=>p.pos==='HB').id,defender:squads[1].find(p=>p.pos==='ILB').id,score:scenario==='td'?7:scenario==='fg'?3:0,touchdown:scenario==='td',safety:scenario==='safety',text:'Test score'};
     motion=new PokeMotion.PlayMotion(event,[...squads[0].filter(p=>p.side==='offense'),...squads[1].filter(p=>p.side==='defense')]);phase=motion.resolveAt-.01;update(.02);`,sandbox);
-   assert.equal(vm.runInContext('!!celebration',sandbox),true);assert.equal(element('scoreMoment').hidden,false);if(scenario==='td')assert.equal(vm.runInContext('camera',sandbox),83,'End-zone camera must reveal the scorer before the dance');
+   assert.equal(vm.runInContext('!!celebration',sandbox),true);assert.equal(element('scoreMoment').hidden,false);if(scenario==='td')assert.equal(vm.runInContext('camera',sandbox),98,'End-zone camera must reveal the scorer before the dance');
    assert.match(element('scoreMoment').innerHTML,scenario==='td'?/TOUCHDOWN/:scenario==='fg'?/IT’S GOOD/:/SAFETY/);
    const team=scenario==='safety'?1:0;assert.equal(vm.runInContext(`motion.frame(motion.resolveAt+.3).players.filter(p=>p.team===${team}&&p.pose==='celebrate').length`,sandbox),10);assert.equal(vm.runInContext(`motion.frame(motion.resolveAt+.3).players.filter(p=>p.team===${team}&&p.pose==='dance').length`,sandbox),1);assert.match(element('scoreMoment').innerHTML,/score-hero/);assert.equal(vm.runInContext('celebration.scorer===motion.frame(motion.resolveAt+.3).players.find(p=>p.pose===\'dance\').p.id',sandbox),true);
    vm.runInContext('paused=true;update(1);',sandbox);assert.equal(vm.runInContext('celebration.elapsed',sandbox),0);vm.runInContext('paused=false;',sandbox);

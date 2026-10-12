@@ -15,7 +15,7 @@ class PlayMotion{
  this.flightDuration=clamp(.36+Math.abs(this.catchY-e.start)*.016,.4,.95);this.catchAt=this.release+this.flightDuration;
  this.runStart=this.run?this.handoff:this.catchAt+.12;let travel=this.run?Math.abs(this.end-(e.start-7)):Math.max(0,this.end-this.catchY);this.contact=this.kick?2.65:this.sack?2.7:this.run||e.complete?this.runStart+clamp(travel/11.5,.75,4.8):this.catchAt+.35;
  this.ultimateAt=e.counter?this.contact-.55:this.snap;this.resolveAt=this.contact+.22;this.duration=this.resolveAt+(e.touchdown?1.8:e.counter?1.4:e.interception?.95:.7);this.powerCues=(e.ultimates||[]).map(u=>{const off=u.team===e.team;let at=e.counter?this.ultimateAt:u.pos==='QB'?this.release-.38:off&&u.id===e.target?(this.run?this.handoff-.3:this.catchAt-.35):!off&&u.id===e.defender?this.contact-.55:this.snap+.08;at=clamp(at,this.snap,this.contact-.25);return{...u,at,end:Math.min(this.duration,at+1.15)}}).sort((a,b)=>a.at-b.at);this.makeFormation();this.routes=routes(e.playCall,e.start,roster);}
- makeFormation(){const b=this.e.start;const add=(pos,x,y,n=0)=>{let p=this.roster.filter(p=>p.pos===pos)[n];this.players.push({p,x,y,off:p.side==='offense'})};add('QB',320,b-5);add('HB',320,b-10);add('FB',245,b-7);['LT','LG','C','RG','RT'].forEach((p,i)=>add(p,232+i*44,b));add('WR',98,b,0);add('WR',542,b,1);add('TE',462,b);add('DE',254,b+2.8,0);add('NT',320,b+2.8);add('DE',386,b+2.8,1);add('OLB',164,b+8,0);add('OLB',476,b+8,1);add('ILB',270,b+11,0);add('ILB',370,b+11,1);add('CB',98,b+8,0);add('CB',542,b+8,1);add('S',235,b+23,0);add('S',420,b+23,1);}
+ makeFormation(){const b=this.e.start;const add=(pos,x,y,n=0)=>{let p=this.roster.filter(p=>p.pos===pos)[n];this.players.push({p,x,y:p.side==='defense'?Math.min(105,y):y,off:p.side==='offense'})};add('QB',320,b-5);add('HB',320,b-10);add('FB',245,b-7);['LT','LG','C','RG','RT'].forEach((p,i)=>add(p,232+i*44,b));add('WR',98,b,0);add('WR',542,b,1);add('TE',462,b);add('DE',254,b+2.8,0);add('NT',320,b+2.8);add('DE',386,b+2.8,1);add('OLB',164,b+8,0);add('OLB',476,b+8,1);add('ILB',270,b+11,0);add('ILB',370,b+11,1);add('CB',98,b+8,0);add('CB',542,b+8,1);add('S',235,b+23,0);add('S',420,b+23,1);}
  carrier(t){let e=this.e;if(this.kick)return{x:320,y:e.start-6,id:this.qbId};if(this.sack){let u=clamp((t-this.snap)/(this.contact-this.snap),0,1);return{x:320+Math.sin(u*3)*15,y:lerp(e.start-5,this.end,u),id:this.qbId}}
  if(t<(this.run?this.handoff:this.catchAt))return{x:320+Math.sin(clamp((t-this.snap),0,1))*10,y:e.start-5-clamp(t-this.snap,0,.8)*2,id:this.qbId};
  if(e.interception)return{x:this.lane,y:this.catchY,id:e.defender};
@@ -39,7 +39,7 @@ class PlayMotion{
  const engagements=this.blocking(ps,t);
  for(const player of ps){const cue=this.powerCues.find(u=>u.id===player.p.id&&u.team===player.team&&t>=u.at&&t<u.end);if(!cue||player.fall||player.pose==='dance')continue;player.power=cue;player.powerAge=t-cue.at;if(t<cue.at+.32){player.powerFacing=player.engageFacing??player.formationFacing;player.pose='ultimate';player.move=0;player.lean=0;player.actionFrame=clamp((t-cue.at)/.32,0,1)*.7;player.jump=0;}}
 
- let ball={x:carrier.x+8,y:carrier.y,arc:0,visible:true,spin:t*14};if(t<this.snap){ball={x:320,y:e.start,arc:0,visible:true,spin:0}}else if(t<this.snap+.18){let u=(t-this.snap)/.18;ball={x:320,y:lerp(e.start,e.start-5,u),arc:0,visible:true,spin:t*22}}else if(this.kick){let u=clamp((t-1.1)/1.55,0,1);ball={x:lerp(320,330,u),y:lerp(e.start-6,this.e.type==='punt'?Math.min(109,e.start+45):108,u),arc:Math.sin(u*Math.PI)*95,visible:t<2.8,spin:t*20}}else if(flight){let u=(t-this.release)/this.flightDuration;ball={x:lerp(330,this.lane,u),y:lerp(e.start-6,this.catchY,u),arc:Math.sin(u*Math.PI)*42,visible:true,spin:t*20}}else if(!this.run&&!this.sack&&!e.complete&&!e.interception&&t>=this.catchAt){ball={x:this.lane+Math.sin((t-this.catchAt)*12)*12,y:this.catchY,arc:Math.max(0,Math.sin((t-this.catchAt)*10)*10),visible:t<this.contact+.2,spin:t*25}}else if(this.run&&t>=this.snap+.18&&t<this.handoff){let hb=ps.find(a=>a.p.id===e.target);let u=clamp((t-(this.handoff-.25))/.25,0,1);ball={x:lerp(330,hb.tx,u),y:lerp(e.start-6,hb.ty,u),arc:8*Math.sin(u*Math.PI),visible:true,spin:t*18}}
+ let ball={x:carrier.x+8,y:carrier.y,arc:0,visible:true,spin:t*14};if(t<this.snap){ball={x:320,y:e.start,arc:0,visible:true,spin:0}}else if(t<this.snap+.18){let u=(t-this.snap)/.18;ball={x:320,y:lerp(e.start,e.start-5,u),arc:0,visible:true,spin:t*22}}else if(this.kick){let u=clamp((t-1.1)/1.55,0,1);ball={x:lerp(320,330,u),y:lerp(e.start-6,this.e.type==='punt'?Math.min(109,e.start+45):e.extraPoint?107+(e.accuracy-.5)*10:108,u),arc:Math.sin(u*Math.PI)*95,visible:t<2.8,spin:t*20}}else if(flight){let u=(t-this.release)/this.flightDuration;ball={x:lerp(330,this.lane,u),y:lerp(e.start-6,this.catchY,u),arc:Math.sin(u*Math.PI)*42,visible:true,spin:t*20}}else if(!this.run&&!this.sack&&!e.complete&&!e.interception&&t>=this.catchAt){ball={x:this.lane+Math.sin((t-this.catchAt)*12)*12,y:this.catchY,arc:Math.max(0,Math.sin((t-this.catchAt)*10)*10),visible:t<this.contact+.2,spin:t*25}}else if(this.run&&t>=this.snap+.18&&t<this.handoff){let hb=ps.find(a=>a.p.id===e.target);let u=clamp((t-(this.handoff-.25))/.25,0,1);ball={x:lerp(330,hb.tx,u),y:lerp(e.start-6,hb.ty,u),arc:8*Math.sin(u*Math.PI),visible:true,spin:t*18}}
  if((e.touchdown||e.score>0||e.safety)&&t>=this.resolveAt)ball.visible=false;
  if(e.fumble&&t>this.contact){ball.x+=Math.min(34,(t-this.contact)*65);ball.arc=Math.abs(Math.sin((t-this.contact)*13))*15}
  let stage=t<this.snap?'SET':(e.playCall==='action'||e.playCall==='draw')&&t<this.snap+.65?'PLAY FAKE':t<this.snap+.2?'SNAP':this.kick?(t<1.1?'KICK':'BALL IN FLIGHT'):this.run?(t<this.handoff?'HANDOFF':impact?'TACKLE':'RUSH'):this.sack?(impact?'SACK':'PRESSURE'):flight?'PASS IN FLIGHT':t<this.release?'DROPBACK':catching?(e.interception?'PICK!':'CATCH!'):impact?'TACKLE':e.complete?'RUN AFTER CATCH':e.interception?'INTERCEPTION':'INCOMPLETE';if(e.touchdown&&t>this.contact)stage='TOUCHDOWN';else if(e.counter&&t>=this.ultimateAt)stage=t>=this.contact?'ULTIMATE COUNTER':'ULTIMATE STRIKE';
@@ -67,5 +67,28 @@ class PlayMotion{
   return contacts;
  }
 }
-root.PokeMotion={PlayMotion,routes,defenseRoutes};if(typeof module!=='undefined')module.exports=root.PokeMotion;
+
+class KickoffMotion{
+ constructor(e,teams){
+  this.e=e;this.teams=teams;this.kick=true;this.snap=.6;this.release=.6;this.catchAt=2.6;this.contact=e.touchback?3:5.1;this.resolveAt=this.contact+.2;this.duration=this.resolveAt+.8;this.powerCues=[];this.routes=[];this.lane=320;this.runStart=this.catchAt;this.qbId=e.qb;
+  this.players=teams[e.team].filter(p=>p.side==='offense').map((p,i)=>({p,team:e.team,off:true,x:p.pos==='QB'?320:70+i*47,y:p.pos==='QB'?33:35}));
+  const returner=teams[1-e.team].find(p=>p.id===e.returner),unit=teams[1-e.team].filter(p=>p.side==='defense').slice(0,10).concat(returner);
+  this.players.push(...unit.map((p,i)=>({p,team:1-e.team,off:false,x:i===10?320:70+i*51,y:i===10?Math.min(102,e.landing):68+(i%3)*6})));
+ }
+ frame(t){
+  const e=this.e,u=clamp((t-this.catchAt)/(this.contact-this.catchAt),0,1),landing=Math.min(103,e.landing),yard=lerp(landing,e.end,u),carrier={id:t<this.catchAt?e.qb:e.returner,x:320+Math.sin(u*8)*15,y:t<this.snap?35:t<this.catchAt?lerp(35,landing,clamp((t-this.snap)/2,0,1)):yard};
+  const players=this.players.map((a,i)=>{
+   let x=a.x,y=a.y,pose='idle',move=0,fall=0;
+   if(t>=this.snap){move=1;pose=a.p.id===e.qb&&a.off&&t<this.snap+.35?'kick':'run';
+    if(a.off){const progress=clamp((t-this.snap)/(this.contact-this.snap),0,1);x=lerp(a.x,320+(i%5-2)*21,progress);y=lerp(a.y,e.end+(i%3)*1.2,progress)}
+    else if(a.p.id===e.returner){y=t<this.catchAt?landing:yard;x=carrier.x;pose=e.touchback?'idle':t<this.catchAt?'catch':t>=this.contact?'down':'run';if(t>=this.contact&&!e.touchback)fall=1}
+    else{const progress=clamp((t-this.snap)/4,0,1);y=lerp(a.y,e.end+4+(i%4)*2,progress);x=lerp(a.x,320+(i%5-2)*37,progress);pose=t>this.catchAt?'block':'run'}
+   }
+   return{...a,tx:x,ty:y,pose,move,fall,lean:0,jump:0,stride:t*12+i,carrier:a.p.id===carrier.id&&a.team===(t<this.catchAt?e.team:1-e.team),direction:{x:0,y:a.off?1:-1}};
+  });
+  const flight=t>=this.snap&&t<this.catchAt,f=clamp((t-this.snap)/(this.catchAt-this.snap),0,1),ball={x:carrier.x,y:carrier.y,arc:flight?Math.sin(f*Math.PI)*110:0,spin:t*18,visible:t<this.resolveAt&&!e.touchback||t<this.catchAt};
+  return{players,engagements:[],ball,carrier,active:t>=this.snap&&t<this.contact,impact:!e.touchback&&t>=this.contact,catching:!e.touchback&&t>=this.catchAt&&t<this.catchAt+.25,stage:t<this.snap?'KICKOFF':flight?'KICK IN FLIGHT':e.touchback?'TOUCHBACK':t<this.contact?'KICK RETURN':'RETURN STOPPED',progress:clamp(t/this.duration,0,1),focusY:carrier.y};
+ }
+}
+root.PokeMotion={KickoffMotion,PlayMotion,routes,defenseRoutes};if(typeof module!=='undefined')module.exports=root.PokeMotion;
 })(typeof window!=='undefined'?window:globalThis);

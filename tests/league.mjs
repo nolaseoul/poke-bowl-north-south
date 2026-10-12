@@ -61,5 +61,9 @@ for(const opponent of ['pewter','cerulean','vermilion','celadon','fuchsia','saff
  assert.equal(result.status,200,'Selected club must be persisted and replayed; finish payload cannot switch rivals');
  assert.equal(sql.prepare('SELECT opponent FROM matches WHERE id=?').get(selected.id).opponent,opponent);
 }
+const flowTicket=(await request('matches','POST',{lineup:ids,rulesVersion:3})).data;assert.equal(flowTicket.rulesVersion,3);
+const flowGame=new sim.Match(rules.random(flowTicket.seed),{teams:rules.teams(ids,flowTicket.seed),footballFlow:true}),flowHistory=[];while(!flowGame.over){flowHistory.push(null);flowGame.next()}
+assert.equal((await request('matches/'+flowTicket.id+'/finish','POST',{calls:[{action:{type:'kickoff',power:12}}],score:[0,0]})).status,400);
+const flowSaved=await request('matches/'+flowTicket.id+'/finish','POST',{calls:flowHistory,score:flowGame.score});assert.equal(flowSaved.status,200,'Version-3 games save through the real ranked endpoint');assert.equal(JSON.parse(sql.prepare('SELECT lineup FROM matches WHERE id=?').get(flowTicket.id).lineup).rulesVersion,3);
 const unconfigured=await handler(new Request('https://bowl.test/api/profile'),{...env,SUPABASE_URL:''});assert.equal(unconfigured.status,503);
 console.log('PASS: 50 deterministic ranked games and eight persisted gym matchups, session verification, guest exclusion, account isolation, country profiles, persistent SQL standings, forged score rejection, completed-only saving and idempotent retries.');sql.close();

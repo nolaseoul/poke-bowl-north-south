@@ -48,13 +48,13 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
   if(path==='/api/matches'&&method==='POST'){
    if(!await profile(env.LEAGUE,userId))fail('Choose your name and country first.',409);
    const data=await body(request),seed=crypto.getRandomValues(new Uint32Array(1))[0];const opponent=data.opponent??'random';teams(data.lineup,seed,opponent);
-   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup,opponent) VALUES(?,?,?,?,?)').bind(id,userId,seed,JSON.stringify(data.lineup),opponent).run();return json({id,seed,opponent,owner:userId},201);
+   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup,opponent) VALUES(?,?,?,?,?)').bind(id,userId,seed,JSON.stringify(data.rulesVersion===3?{ids:data.lineup,rulesVersion:3}:data.lineup),opponent).run();return json({id,seed,opponent,rulesVersion:data.rulesVersion===3?3:1,owner:userId},201);
   }
   const finish=path.match(/^\/api\/matches\/([a-f0-9-]{36})\/finish$/);
   if(finish&&method==='POST'){
    const stored=await env.LEAGUE.prepare('SELECT * FROM matches WHERE id=? AND user_id=?').bind(finish[1],userId).first();if(!stored)fail('Match not found.',404);
    if(stored.completed_at)return json({saved:true,profile:await profile(env.LEAGUE,userId)});
-   const data=await body(request),match=replay(JSON.parse(stored.lineup),stored.seed,data.calls,stored.opponent);
+   const data=await body(request),lineup=JSON.parse(stored.lineup),match=replay(Array.isArray(lineup)?lineup:lineup.ids,stored.seed,data.calls,stored.opponent,Array.isArray(lineup)?1:lineup.rulesVersion);
    if(!Array.isArray(data.score)||data.score.length!==2||data.score.some((n,i)=>n!==match.score[i]))fail('The match result could not be verified.');
    await env.LEAGUE.prepare("UPDATE matches SET completed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),points_for=?,points_against=?,plays=? WHERE id=? AND user_id=? AND completed_at IS NULL").bind(...match.score,match.plays,stored.id,userId).run();return json({saved:true,profile:await profile(env.LEAGUE,userId)});
   }

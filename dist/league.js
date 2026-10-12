@@ -11,11 +11,12 @@
   return offered;
  }
  function teams(ids,seed,opponent='random'){if(!draft.valid(ids)||ids.some(id=>!Number.isInteger(id)))throw Error('Choose 22 different Pokémon.');if(!clubs.valid(opponent))throw Error('Choose a valid opponent team.');const d=new draft.Draft(ids);return[d.roster(),opponent==='random'?d.opponent(random(seed^0x9e3779b9)):clubs.roster(opponent)]}
- function replay(ids,seed,calls,opponent='random'){
+ function replay(ids,seed,calls,opponent='random',rulesVersion=1){
   if(!Array.isArray(calls)||calls.length>200)throw Error('Invalid play history.');
-  const m=new sim.Match(random(seed),{teams:teams(ids,seed,opponent),...clubs.options(opponent)});
+  const m=new sim.Match(random(seed),{teams:teams(ids,seed,opponent),...clubs.options(opponent),footballFlow:rulesVersion===3});
   for(const call of calls){
    if(m.over)throw Error('Invalid play history.');
+   if(m.footballFlow&&m.actor()!==null){if(call!==null&&(typeof call!=='object'||Array.isArray(call)||Object.keys(call).length!==1||!Object.hasOwn(call,'action')||m.actor()!==0))throw Error('Invalid play history.');try{m.next(call?.action??null)}catch{throw Error('Invalid play history.')}continue}
    if(call!==null&&typeof call==='object'){
     if(m.team!==1||Array.isArray(call)||Object.keys(call).length!==1||!Object.hasOwn(sim.defenseCalls,call.defense))throw Error('Invalid play history.');
     m.next(null,call.defense);

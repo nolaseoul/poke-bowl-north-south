@@ -12,7 +12,7 @@ const handler=createHandler();
 function fetcher(url,options={}){return handler(new Request('https://bowl.test'+url,options),env)}
 const stores=[0,1,2].map(()=>{const m=new Map();return{getItem:k=>m.get(k)||'',setItem:(k,v)=>m.set(k,v)}});
 const ids=new Draft.Draft().autoFill(League.random(12)).map(p=>p.id),opponent=new Draft.Draft().autoFill(League.random(25)).map(p=>p.id);
-const host=await PvP.RoomClient.create(ids,'Pika ⚡ FC',{fetch:fetcher,storage:stores[0]}),room=rooms.get(host.id);
+const host=await PvP.RoomClient.create(ids,'Pika ⚡ FC',{fetch:fetcher,storage:stores[0],rulesVersion:1}),room=rooms.get(host.id);
 let publicView=await (await fetcher('/api/rooms/'+host.id)).json();assert.equal(publicView.state,'waiting');assert.equal(publicView.token,undefined);assert.equal(publicView.seed,undefined);assert.equal(publicView.lineups,undefined);
 const visitor=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[1]});await visitor.join(opponent,'Eevee United');const intruder=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[2]});await assert.rejects(intruder.join(ids,'Third wheel'),/Both coaches/);
 await assert.rejects(intruder.call(0,'quick'),/browser/);await assert.rejects(host.call(0,'nope'),/valid play/);
@@ -33,10 +33,33 @@ while(view.state!=='finished'){
 }
 assert.ok(rounds>20&&rounds<200);assert.ok(sawCounter);const stored=await room.state.storage.get('room'),verified=rebuild(stored);assert.deepEqual(verified.match.score,view.snapshot.score);assert.deepEqual(verified.match.stats,view.snapshot.stats);assert.equal(verified.events.length,rounds);
 for(let i=0;i<rounds;i++){assert.equal(verified.events[i].snapshot.plays,i+1);if(i){assert.notStrictEqual(verified.events[i].snapshot.stats,verified.events[i-1].snapshot.stats);assert.notStrictEqual(verified.events[i].snapshot.score,verified.events[i-1].snapshot.score)}}
-const returning=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[0]});assert.equal((await returning.poll()).seat,0,'Invite restores the correct coach from its private browser token');
+const returning=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[0],rulesVersion:1});assert.equal((await returning.poll()).seat,0,'Invite restores the correct coach from its private browser token');
 const publicFinal=await (await fetcher('/api/rooms/'+host.id)).json();assert.equal(publicFinal.snapshot,undefined);assert.equal(publicFinal.events,undefined);
 // Concurrent coach requests resolve exactly one down and reject a third-player join atomically.
-const second=await PvP.RoomClient.create(ids,'Second duel',{fetch:fetcher,storage:stores[0]}),s2=new PvP.RoomClient(second.id,{fetch:fetcher,storage:stores[1]});await s2.join(ids,'Mirror squad');const h2=(await second.poll()).hand,d2=(await s2.poll()).hand;await Promise.all([second.call(0,h2[0]),s2.call(0,d2[0])]);assert.equal((await second.poll()).round,1);
+const second=await PvP.RoomClient.create(ids,'Second duel',{fetch:fetcher,storage:stores[0],rulesVersion:1}),s2=new PvP.RoomClient(second.id,{fetch:fetcher,storage:stores[1]});await s2.join(ids,'Mirror squad');const h2=(await second.poll()).hand,d2=(await s2.poll()).hand;await Promise.all([second.call(0,h2[0]),s2.call(0,d2[0])]);assert.equal((await second.poll()).round,1);
 const old=await room.state.storage.get('room');old.expires=Date.now()-1;await room.state.storage.put('room',old);await assert.rejects(host.poll(),/expired/);await room.object.alarm();assert.equal(await room.state.storage.get('room'),undefined);
 const forbidden=await fetcher('/api/rooms',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://evil.test'},body:JSON.stringify({lineup:ids})});assert.equal(forbidden.status,403);
+// New clients play the complete football flow; old rooms above retain their original replay rules.
+const full=await PvP.RoomClient.create(ids,'Coin toss crew',{fetch:fetcher,storage:stores[0]}),otherFull=new PvP.RoomClient(full.id,{fetch:fetcher,storage:stores[1]});await otherFull.join(opponent,'Meter masters');const fullRoom=rooms.get(full.id),newState=await fullRoom.state.storage.get('room');newState.seed=11;await fullRoom.state.storage.put('room',newState);
+let fullView=await full.poll(),fullRounds=0;const stages=new Set(),fullCoaches=[full,otherFull];
+assert.equal(fullView.snapshot.phase,'coinToss');assert.equal(PvP.rotate(await otherFull.poll()).snapshot.actionTeam,1,'The visiting coach waits for the host to call the coin');
+while(fullView.state!=='finished'){
+ const s=fullView.snapshot;stages.add(s.phase);
+ if(s.actionTeam!==null){
+  const actor=s.actionTeam;await assert.rejects(fullCoaches[1-actor].call(fullRounds,{type:'kickoff',power:1}),/other coach/);
+  const action=s.phase==='coinToss'?{type:'toss',choice:'heads'}:s.phase==='receive'?{type:'receive',choice:'kick'}:s.phase==='conversion'?{type:'conversion',choice:fullRounds%2?'pat':'two'}:s.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.9};
+  if(s.phase==='kickoff')await assert.rejects(fullCoaches[actor].call(fullRounds,{type:'kickoff',power:10}),/power/);
+  await fullCoaches[actor].call(fullRounds,action);
+ }else{
+  const offense=s.team,oh=(await fullCoaches[offense].poll()).hand,dh=(await fullCoaches[1-offense].poll()).hand;
+  const call=oh.includes('deep')?'deep':oh.includes('inside')?'inside':oh[0],defense=dh.find(k=>Sim.defenseCalls[k].counters!==call)||dh[0];
+  await Promise.all([fullCoaches[offense].call(fullRounds,call),fullCoaches[1-offense].call(fullRounds,defense)]);
+ }
+ fullRounds++;assert.ok(fullRounds<200);fullView=await full.poll();const theirs=await otherFull.poll();assert.deepEqual(theirs.snapshot,fullView.snapshot);assert.equal(fullView.round,fullRounds);
+ const rotated=PvP.rotate(theirs);assert.deepEqual(rotated.snapshot.score,[...fullView.snapshot.score].reverse());if(fullView.snapshot.actionTeam!==null)assert.equal(rotated.snapshot.actionTeam,fullView.snapshot.actionTeam^1);
+ fullCoaches.forEach(c=>c.consume(fullRounds));
+}
+assert.ok(stages.has('kickoff')&&stages.has('conversion'));const fullStored=await fullRoom.state.storage.get('room');assert.deepEqual(rebuild(fullStored).match.score,fullView.snapshot.score);assert.deepEqual(rebuild(fullStored).match.stats,fullView.snapshot.stats);
+console.log(`PASS: ${fullRounds} version-3 PvP actions including toss, receive choice, kickoff meters, conversions, actor enforcement, both perspective rotations and durable replay.`);
+
 console.log(`PASS: two real coach clients, ${rounds} authoritative PvP downs through final whistle, private calls/tokens/seeds, idempotency, concurrency, third-player rejection, durability, refresh recovery, mirrored perspectives, expiry and full stat agreement.`);

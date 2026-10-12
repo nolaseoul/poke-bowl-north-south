@@ -3,6 +3,8 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dances=typeof module!=='undefined'?require('./dances.js'):root.PokeDances;
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
+// Keep the line, both units and the scoring end zone in view, in either direction.
+function cameraFor(yard){return clamp(yard+(yard>=78?8:4),12,98)}
 class Stadium{
  constructor(canvas,images){
   this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;this.sprites=root.PokeSprites?new root.PokeSprites.SpriteBank():null;
@@ -124,5 +126,5 @@ class Stadium{
   ctx.restore();if(replaying){ctx.fillStyle='#14291de8';ctx.fillRect(455,243,210,23);ctx.fillStyle='#e5f894';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('↺ HIGHLIGHT REPLAY',560,259)}if(paused){ctx.fillStyle='#0e211baa';ctx.fillRect(0,0,1120,640);ctx.fillStyle='#d8f474';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.fillText('BROADCAST PAUSED',560,330)}
  }
 }
-root.PokeStadium={Stadium,project};if(typeof module!=='undefined')module.exports=root.PokeStadium;
+root.PokeStadium={Stadium,project,cameraFor};if(typeof module!=='undefined')module.exports=root.PokeStadium;
 })(typeof window!=='undefined'?window:globalThis);
