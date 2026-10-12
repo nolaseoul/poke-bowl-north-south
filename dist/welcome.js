@@ -7,6 +7,7 @@
  function enter(){close();window.PokeAudio?.start();window.PokeAccount?.requestEntry();document.getElementById('draftTitle').focus({preventScroll:true});}
  function play(){enter();window.PokeTeamPicker.open()}
  document.getElementById('welcomePlay').onclick=play;
+ document.getElementById('guidePlay').onclick=play;
  document.getElementById('welcomeDraft').onclick=()=>{enter();document.getElementById('draftSearch').focus({preventScroll:true});};
  document.getElementById('welcomeFriends').onclick=()=>{enter();document.getElementById('inviteFriend').focus({preventScroll:true});};
  document.getElementById('welcomeLeague').onclick=()=>document.getElementById('leaderboardNav').click();

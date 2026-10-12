@@ -14,6 +14,7 @@ A new browser automatically gets **22 unique starters from the 151 Kanto species
 
 Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams calling offense and defensive counters. Select 1×, 2×, or 4× broadcast speed, or pause the match. Kanto Blue attacks right and Rocket Red attacks left; possession changes turn the horizontal field around. Phones support portrait and landscape, with a horizontally scrolling playbook.
 
+- Public [How to play](https://www.pokeball.gg/how-to-play), [gym teams](https://www.pokeball.gg/teams) and [player ratings](https://www.pokeball.gg/player-ratings) guides explain the real rules, rosters and position projections. Rebuild them with `node scripts/build-guides.cjs` after game data changes.
 - Google Search Console uses the verified `pokeball.gg` Domain property. Public pages include search titles, descriptions, canonicals and a sitemap; see [search setup and maintenance](docs/search.md).
 - Basic visits and page views are tracked with Cloudflare Web Analytics. The private dashboard includes countries, referrers, devices and page performance; see [analytics access and setup](docs/analytics.md).
 - Game, roster and friend-invite links include a dedicated pixel-art stadium cover with Open Graph and X large-image metadata. See [share preview and artwork notes](docs/share-preview.md).

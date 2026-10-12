@@ -40,7 +40,11 @@ provider secrets or service-role keys in `dist/` or public configuration.
 
 ## Check and publish
 
+Regenerate the public guides after changing game rules, rosters or ratings.
+The generated HTML is committed so crawlers can read it without JavaScript.
+
 ```sh
+node scripts/build-guides.cjs
 node tests/game.cjs
 node tests/motion.cjs
 node tests/music.cjs
