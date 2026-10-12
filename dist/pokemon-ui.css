@@ -1,0 +1,46 @@
+/* Electric yellow, Poké Ball red, water blue and psychic violet. */
+:root{--lime:#ffdc45;--muted:#a3b9d5;--poke-red:#ff5964;--poke-blue:#59baff;--poke-purple:#b793ff;--poke-mint:#60e0be}
+body{background:radial-gradient(ellipse at 5% 12%,#153e7050,transparent 45%),#0c1729;color:#f3f5ff}
+header{border-color:#304c70}.ball{color:var(--poke-red)}.brand>span:not(.ball){color:var(--lime)}.live i{background:var(--poke-mint)}
+.account-nav button,#music,#sound,.draft-nav{border-color:#426389;background:#152842;color:#d9eaff}
+#accountNav{background:#263c76;border-color:#668ddd;color:#e4edff}#leaderboardNav{color:#ffdc45}
+#profileStatus{background:#10243a;color:#bfd4ee;border-color:#2c4f70}#profileStatus.ranked{color:var(--poke-mint)}
+.welcome-title em,.welcome-title span{color:var(--lime)}.welcome-topline b,.welcome-badges span{color:#a6ddff}
+.welcome-menu button{border-color:#416590;background:linear-gradient(120deg,#173458ee,#192641ee)}
+.welcome-menu #welcomePlay{background:linear-gradient(120deg,#ffe66c,#ffcf36);color:#19234b;border-color:#ffe883;box-shadow:0 5px 0 #b77916}
+.welcome-menu #welcomeDraft{border-left:4px solid var(--poke-blue)}
+.welcome-menu #welcomeFriends{border-left:4px solid var(--poke-red)}
+.welcome-menu #welcomeLeague{border-left:4px solid var(--poke-purple)}
+.welcome-menu button:hover{border-color:#ffd748}.welcome-menu #welcomePlay:hover{background:#ffe779}
+.welcome-guide-nav a{color:#9dd9ff}.welcome-guide-nav a:hover{color:#ffe36b}
+.home-guide{background:#0e2039;border-top:3px solid #397ccc}.home-guide h2 em{color:#ffdc45}
+.home-guide-links a:nth-child(1){border-top:3px solid #ff636b}.home-guide-links a:nth-child(2){border-top:3px solid #5cbcff}.home-guide-links a:nth-child(3){border-top:3px solid #b68bff}
+.home-guide-links a b{color:#ffe36d}.guide-button,.lime-button{background:#ffdc45;color:#172545}
+.draft-screen,.draft-workspace,.scouting{color:#eaf2ff}.draft-tools,.draft-summary,.draft-slot,.player-card,.team-picker-selection{background:#14273e;border-color:#345675}
+.player-card:hover,.draft-slot:hover{border-color:#5dc3ff}.meter{background:#263c58}.meter i{background:linear-gradient(90deg,#4ca8f3,#66e0c2)}
+.tabs button.active,.stat-tabs button.active{background:#253d71;color:#ffdf5b;border-color:#6396e7}
+.team-picker,.league-dialog{background:linear-gradient(155deg,#162c4b,#101c33)!important;border:1px solid #557fb5!important;border-top:4px solid #ff5964!important;color:#f2f5ff}
+.team-picker h2,.league-dialog h2{color:#ffe06a}.team-picker-tools,.team-picker-selection{border-color:#355a88}
+.team-picker-card{background:#172c49;border-color:#3c5b85}.team-picker-card.selected{background:#223f6b;border-color:#ffdc45}
+.league-dialog input,.league-dialog select{background:#0c1b30;color:#f1f5ff;border:1px solid #45688e}
+.league-dialog input:focus,.league-dialog select:focus{border-color:#68c8ff}
+.league-dialog .country-search{margin-bottom:6px;font-size:12px;padding:10px 12px}
+.country-results{display:block;font:400 10px/1.5 'DM Sans',sans-serif;color:#a8d8ff;letter-spacing:0;text-transform:none}
+.country-results:empty{display:none}.country-results:not(:empty){margin:0 0 6px}
+.auth-tabs button[aria-pressed=true]{background:#254b85;color:#ffe16b}.google-login{border-color:#7295c9;background:#eef4ff;color:#172b52}
+.google-login b{color:#377fe8}.guest-section{border-color:#4b71a1}.guest-section button{background:#243d6b;color:#a9e5ff;border-color:#547fad}
+.account-art span,#accountMessage{color:#ffe074}.account-foot button{color:#8fd6ff}.auth-setup{background:#342b45;color:#f0d2ff!important}
+.profile-record{background:#172b48;border-color:#4d82b2;color:#77e5c4}.league-dialog th{color:#a4c9ec}.league-dialog td:last-child{color:#ffe16b}
+.match-heading h1 em{color:#ffd94d}.auto-mode{background:#203456;border-color:#5173a1;color:#b6d9ff}.auto-mode[aria-pressed=true]{background:#6cdebf;color:#102e36;border-color:#8af6d6}
+.arena{border:1px solid #4c77a0;box-shadow:0 8px 30px #0003}.arena .scoreboard{background:linear-gradient(90deg,#173d70,#132237 45%,#39253b)}.scoreteam:first-child strong{color:#8bd5ff}.scoreteam:last-child strong{color:#ff9ba4}.clock strong{color:#ffe173}
+.arena .ticker{background:#142b49;color:#d2e8ff}.arena .ticker b{color:#ffe16b}
+.coach-card{background:#142b46;border-color:#365d85}.coach-card>.eyebrow{color:#94cfff}.coach-card .team>b{color:#ffd94d}.observation{background:linear-gradient(140deg,#293c68,#202949);border-color:#666bb0}.observation h3{color:#ffe58b}.observation p{color:#c6d8ef}.observation>span:last-child{color:#adaee7}
+.playbook{background:#10213b;border-top:3px solid #437cbd}.playbook-heading .eyebrow{color:#ffe074}.playbook-heading p{color:#a8c6ea}.playbook-team{color:#89baff}
+.play-card{border:1px solid #3c5c83;border-top:3px solid var(--play-color);background:linear-gradient(155deg,color-mix(in srgb,var(--play-color) 14%,#152840),#15233b);color:#eef4ff}
+.play-card strong{white-space:normal;line-height:1.25;min-height:25px}.play-card small{color:#b9cce4}.play-card:hover:enabled{background:#253d62;border-color:var(--play-color)}
+.play-card.active{background:linear-gradient(145deg,#3b4468,#223a5c);border-color:#ffe16b;box-shadow:inset 0 0 0 1px #ffe16b}
+.call-play{background:#ffdc45;color:#1d2b4b;box-shadow:0 3px 0 #b77a1b}.call-play:disabled{background:#253a57;color:#91a8c5;box-shadow:none}.playbook-note{color:#a3bbd8}
+.playbook .ultimate-roster,.ultimate-roster{background:#162945;border-color:#3d5e8d}.ultimate-roster summary{color:#bd9fff}.ultimate-roster>p{color:#b3c9e6}.ultimate-player{background:#1b3351}.ultimate-player b small{color:#9ec3e5}.ultimate-player>strong{color:#7ae5c6}
+.quiet-button{background:#152a47;border-color:#53739b;color:#b5d7f8}.skip-replay{background:#213966ed;color:#ffe273;border-color:#ffd94d}
+:focus-visible{outline:2px solid #80dcff;outline-offset:3px}
+@media(max-width:680px){.play-card strong{min-height:28px}.league-dialog .country-search{font-size:16px}.league-dialog select,.league-dialog input{font-size:16px}}

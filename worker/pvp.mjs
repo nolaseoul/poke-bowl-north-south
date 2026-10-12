@@ -19,7 +19,7 @@ export class PvPRoom{
   try{
    const url=new URL(request.url),method=request.method,token=request.headers.get('X-Room-Token');let room=await this.state.storage.get('room');
    if(url.pathname==='/create'&&method==='POST'){
-    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
+    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,handVersion:2,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
    }
    if(!room)fail('Invitation not found or expired.',404);if(Date.now()>room.expires)fail('This invitation expired. Create a new one.',410);
    let seat=room.coaches.findIndex(c=>c&&c.token===token);
@@ -36,6 +36,7 @@ export class PvPRoom{
     const offense=seat===match.team,choices=offense?sim.calls:sim.defenseCalls;
     if(typeof data.call!=='string'||!Object.hasOwn(choices,data.call))fail('Choose a valid play.');
     if(room.pending[seat]&&room.pending[seat]!==data.call)fail('Your call is already locked for this down.',409);
+    if(room.handVersion===2&&!league.hand(room.seed,room.calls.length,!offense).includes(data.call))fail('Choose one of your five offered plays.');
     room.pending[seat]=data.call;room.revision++;
     if(room.pending.every(Boolean)){
      room.calls.push({offense:room.pending[match.team],defense:room.pending[1-match.team]});room.pending=[null,null];
@@ -43,7 +44,7 @@ export class PvPRoom{
     }
     await this.state.storage.put('room',room);
    }else if(method!=='GET')fail('Not found.',404);
-   return json({id:room.id,seat,state:match.over?'finished':'playing',names:match.names,lineups:room.coaches.map(c=>c.lineup),round:room.calls.length,revision:room.revision,locked:room.pending.map(Boolean),snapshot:snapshot(match),events,expires:room.expires});
+   return json({id:room.id,seat,state:match.over?'finished':'playing',names:match.names,lineups:room.coaches.map(c=>c.lineup),round:room.calls.length,revision:room.revision,locked:room.pending.map(Boolean),snapshot:snapshot(match),hand:room.handVersion===2?league.hand(room.seed,room.calls.length,seat!==match.team):null,events,expires:room.expires});
   }catch(error){if(!error.status)console.error('Duel request failed',error.name);return json({error:error.status?error.message:'Could not connect to the duel. Try again.'},error.status||500)}
  })}
 }

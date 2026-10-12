@@ -16,7 +16,7 @@ choose the Supabase organization and confirm any quoted project cost.
    configure a custom SMTP sender so friends can receive confirmations and
    reset emails. Supabase's default mailer only sends to project team addresses.
 2. Set the Auth Site URL to
-   `https://poke-bowl-north-south.freshcut-revival.workers.dev/` and add that exact
+   `https://www.pokeball.gg/` and add that exact
    URL to the redirect allowlist. Add the actual custom game domain separately
    when one is connected. For local testing, allow `http://127.0.0.1:8787/`.
 3. Create a Google OAuth web client in the owner's Google Cloud project. Add the
@@ -91,3 +91,24 @@ email delivery; those require the configured services and real browser checks.
 Server replay prevents arbitrary score payloads, but the client-visible seed
 and rules do not make this a cheat-proof competitive platform. Rate limiting,
 season rules, and stronger anti-abuse controls can be added as the league grows.
+
+
+## October 11 auth audit and onboarding updates
+
+The deployed config endpoint returned null URL/key and Google disabled. The
+connected Supabase account listed only the paused SchoolRoads project; no
+dedicated Poke Bowl auth project exists. The browser also exposes FreshCut
+(Pro) and School Roads (Free) organizations. Do not reuse either unrelated
+project's users or credentials. The owner was asked to select the organization
+for a separate project. The MCP cost endpoint was unavailable, so no project
+was created and no paid resource or auth setting was changed.
+
+The guest, profile and leaderboard country selectors now put United States
+first after the placeholder. Each has a country-name/code search box, a result
+count and a no-match message. Filtering preserves an existing selection so
+typing a query never changes the country that would be submitted.
+
+OAuth callback errors are shown in the account dialog. Password-recovery mode
+is preserved when an initial session restoration completes concurrently. Client
+tests cover provider flows with a mock; real sign-in remains unverified until
+the provider setup above is completed.

@@ -13,10 +13,22 @@
   storePending(pending().filter(r=>r.ticket.id!==ticket.id));if(profile?.user_id===ticket.owner){profile=result.profile;status()}return result;
  }
  async function syncPending(){for(const item of pending().filter(r=>r.ticket.owner===profile?.user_id)){try{await saveMatch(item.ticket,item.calls,item.score)}catch{break}}}
- const redirectTo=location.origin+'/',flag=code=>code?String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0))):'🌐';
+ const redirectTo=location.origin+'/',callbackParams=new URLSearchParams(location.search||''),callbackHash=new URLSearchParams((location.hash||'').slice(1)),callbackError=callbackParams.get('error_description')||callbackHash.get('error_description'),flag=code=>code?String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0))):'🌐';
  const display=new Intl.DisplayNames(['en'],{type:'region'}),countryName=code=>display.of(code)||code;
+ const countryOptions=PokeLeague.countries.map(code=>({code,name:countryName(code)})).sort((a,b)=>a.code==='US'?-1:b.code==='US'?1:a.name.localeCompare(b.name));
+ const countryFilters={};
  for(const id of ['profileCountry','guestCountry','leaderCountry']){
-  const select=$(id);PokeLeague.countries.map(code=>({code,name:countryName(code)})).sort((a,b)=>a.name.localeCompare(b.name)).forEach(({code,name})=>{const option=document.createElement('option');option.value=code;option.textContent=flag(code)+' '+name;select.append(option)});
+  const select=$(id),search=$(id+'Search'),state=$(id+'Results'),placeholder=id==='leaderCountry'?'Every country':'Choose your country';
+  const render=()=>{
+   const value=select.value,query=search.value.trim().toLowerCase();
+   const matches=countryOptions.filter(c=>!query||c.name.toLowerCase().includes(query)||c.code.toLowerCase().includes(query)||c.code==='US'&&['usa','america','u.s.'].some(alias=>alias.includes(query)));
+   select.replaceChildren();
+   const add=(value,text)=>{const option=document.createElement('option');option.value=value;option.textContent=text;select.append(option)};
+   add('',placeholder);matches.forEach(c=>add(c.code,flag(c.code)+' '+c.name));
+   if(value&&!matches.some(c=>c.code===value)){const selected=countryOptions.find(c=>c.code===value);if(selected)add(value,flag(value)+' '+selected.name+' · selected')}
+   select.value=value;state.textContent=query?(matches.length?matches.length+' '+(matches.length===1?'country':'countries')+' found':'No countries found. Try another name or code.'):'';
+  };
+  search.oninput=render;countryFilters[id]=()=>{search.value='';render()};render();
  }
  function message(text,error=false){$('accountMessage').textContent=text;$('accountMessage').classList.toggle('error',error)}
  function status(){
@@ -25,7 +37,7 @@
   $('profileStatus').classList.toggle('ranked',Boolean(profile&&session));
  }
  function show(next=mode){
-  mode=next;message('');
+  mode=next;message('');countryFilters.profileCountry();countryFilters.guestCountry();
   const isProfile=mode==='profile',isRecovery=mode==='recovery';
   $('accountWelcome').hidden=isProfile||isRecovery;$('accountProfile').hidden=!isProfile;$('recoveryForm').hidden=!isRecovery;
   $('accountTitle').textContent=isProfile?'Your place in the league.':isRecovery?'Back in the game.':'Build your legacy.';
@@ -47,7 +59,7 @@
  async function signedIn(value,recovery=false){
   const revision=++authRevision;session=value;
   if(!value){profile=null;status();return}
-  try{const data=await api('profile');if(revision!==authRevision)return;profile=data.profile;chosen=Boolean(profile);status();if(profile)syncPending();if(recovery)show('recovery');else if(!profile)show('profile');else if(dialog.open){dialog.close();message('')}}catch(error){if(revision===authRevision){show('login');message(error.message,true)}}
+  try{const data=await api('profile');if(revision!==authRevision)return;profile=data.profile;chosen=Boolean(profile);status();if(profile)syncPending();if(recovery)show('recovery');else if(mode==='recovery')return;else if(!profile)show('profile');else if(dialog.open){dialog.close();message('')}}catch(error){if(revision===authRevision){show('login');message(error.message,true)}}
  }
  async function chooseGuest(){
   if(!$('guestCountry').value){message('Choose the country you want to represent.',true);$('guestCountry').focus();return}
@@ -88,7 +100,7 @@
    client.auth.onAuthStateChange((event,value)=>{session=value;if(event==='SIGNED_IN'||event==='SIGNED_OUT'||event==='PASSWORD_RECOVERY')setTimeout(()=>signedIn(value,event==='PASSWORD_RECOVERY'),0)});
    const {data,error}=await client.auth.getSession();if(error)message(error.message,true);await signedIn(data.session);
   }else{dialog.classList.add('auth-unavailable');$('authSetupNotice').hidden=false;['authSubmit','googleLogin','forgotPassword','signupTab','authEmail','authPassword'].forEach(id=>$(id).disabled=true)}
-  $('googleLogin').disabled=!client||!config.google;$('googlePending').hidden=Boolean(client&&config.google);status();if(!chosen&&!dialog.open&&!window.PokeWelcome?.active)show(session?'profile':'login');
+  $('googleLogin').disabled=!client||!config.google;$('googlePending').hidden=Boolean(client&&config.google);status();if(callbackError){show('login');message('Sign-in did not complete: '+callbackError.slice(0,240),true)}else if(!chosen&&!dialog.open&&!window.PokeWelcome?.active)show(session?'profile':'login');
  })().catch(error=>{status();if(!window.PokeWelcome?.active)show('login');message(error.message,true)});
  window.PokeAccount={ready,async requestEntry(){await ready;if(!chosen)show(session?'profile':'login')},async prepareMatch(ids,opponent='random'){await ready;if(!chosen){show(session?'profile':'login');throw Error('Choose an account or guest play before kickoff.')}if(!session||!profile)return null;return api('matches',{method:'POST',body:JSON.stringify({lineup:ids,opponent})})},async finishMatch(ticket,calls,score){if(!ticket)return {saved:false};return saveMatch(ticket,calls,score)},isSignedIn:()=>Boolean(session&&profile)};
 })();

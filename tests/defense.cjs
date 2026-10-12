@@ -5,7 +5,7 @@ const {PlayMotion,defenseRoutes}=require('../dist/motion.js');
 const {random,teams,replay}=require('../dist/league.js');
 const {Draft}=require('../dist/draft.js');
 const {cuesBetween}=require('../dist/fx.js');
-assert.equal(Object.keys(defenseCalls).length,5);assert.equal(new Set(Object.values(defenseCalls).map(d=>d.counters)).size,5);
+assert.equal(Object.keys(defenseCalls).length,10);assert.equal(new Set(Object.values(defenseCalls).map(d=>d.counters)).size,10);
 for(const team of [0,1])for(const [offense]of Object.entries(calls))for(const [defense,definition]of Object.entries(defenseCalls)){
  const m=new Match(random(141));m.team=team;const e=m.next(offense,defense),right=definition.counters===offense;
  assert.equal(e.counter,right);assert.equal(e.counterRead,right);
@@ -36,4 +36,4 @@ for(let seed=1;seed<=25;seed++){
  const verified=replay(ids,seed,history);assert.deepEqual(verified.score,m.score);assert.deepEqual(verified.stats,m.stats);
 }
 assert.ok(coachedDefenses>0);for(const call of [{defense:'press'},{defense:'bad'},[],{defense:'gap',offense:'deep'},'__proto__'])assert.throws(()=>replay(ids,2,[call]),/history/);
-console.log(`PASS: all 25 offense/defense matchups on both teams; single ready ultimate on QB, uniformly randomized 5–10-yard losses (${distribution}), exhausted/fallback charges, safeties, special-team exclusion, visible strike/contact, fair hidden CPU choices and 25 replayed games with ${coachedDefenses} defensive calls.`);
+console.log(`PASS: all 100 offense/defense matchups on both teams; single ready ultimate on QB, uniformly randomized 5–10-yard losses (${distribution}), exhausted/fallback charges, safeties, special-team exclusion, visible strike/contact, fair hidden CPU choices and 25 replayed games with ${coachedDefenses} defensive calls.`);
