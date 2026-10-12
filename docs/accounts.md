@@ -8,6 +8,19 @@ stored in D1 or returned by the public leaderboard.
 
 ## Activation
 
+As of October 12, the dedicated **Poke Bowl (pokeball.gg)** project is healthy in
+the free Poké Bowl organization. Project reference: `urkxyzvczwsmznudrqjz`.
+The Worker configuration uses its public API URL and publishable key. Auth Site
+URL is `https://www.pokeball.gg/`; the exact redirect allowlist includes that URL,
+`https://pokeball.gg/` and the existing workers.dev game's root URL.
+
+Email/password is enabled with confirmation required. Custom SMTP and Google
+OAuth credentials are still pending. Public signup/email delivery, Google
+consent and a real signed-in ranked result have **not** been verified. The
+default email service is limited to project-team addresses; connecting the
+project alone does not make public signup production-ready. Google stays
+disabled in the game until provider setup and verification are complete.
+
 A **separate Poké Bowl Supabase project** must be selected or created. Do not
 reuse the unrelated SchoolRoads project. Provisioning waits for the owner to
 choose the Supabase organization and confirm any quoted project cost.
