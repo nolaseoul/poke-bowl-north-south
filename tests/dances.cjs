@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const Dances=require('../dist/dances.js'),Sim=require('../dist/sim.js'),Motion=require('../dist/motion.js'),Sprites=require('../dist/sprites.js'),SpriteData=require('../dist/sprite-data.js'),{Stadium}=require('../dist/stadium.js');
-assert.equal(Dances.catalog.length,151);assert.equal(new Set(Dances.catalog.map(d=>d.name)).size,151);
+assert.equal(Dances.catalog.length,152);assert.equal(new Set(Dances.catalog.map(d=>d.name)).size,152);
 const trajectories=new Set();
 for(let id=1;id<=151;id++){
  const points=[];for(let t=0;t<=4.8;t+=.06){const p=Dances.sample(id,t);assert.ok(Object.values(p).filter(v=>typeof v==='number').every(Number.isFinite));assert.ok(p.sx>.7&&p.sy>.7);assert.ok(p.facing>=0&&p.facing<8);assert.ok(p.lift>=0&&p.lift<32);assert.ok(Math.abs(p.x)<45);points.push(p);}

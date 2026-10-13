@@ -21,6 +21,7 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - Name your team on the draft screen (up to 24 characters). The name is remembered on this device and appears in the scoreboard, playbook, feed, score celebrations and final result. A rename applies at the next kickoff.
 - Share your complete starting 22 with **Share team**. Your friend can preview the name and explicitly load the roster before editing or playing. **Invite friend · 1v1** creates a private 12-hour duel link. Two coaches draft their teams, lock hidden offense/defense calls each down, then watch one server-resolved match. Guest-friendly duels are unranked; the invite restores your seat in the browser you joined with.
 - Every prospect has athletic ratings and different football skills and overall ratings for each position. Search by name or Pokédex number, filter by type, and compare position fit, speed, or strength.
+- **Romantium**, an original Steel/Electric robot, is available through **BUILD MY TEAM**. Search his name to draft him at any position: **100 OVR, 110 Speed and 110 Strength**, the highest base ratings in the game. His once-per-set **Quantum Overdrive** boosts position skills, speed and strength by 12 (capped at 120). He has an original portrait, eight-direction animated robot rig and Quantum Robot victory dance. Automatic drafts and gym clubs keep their original Kanto pools. See [Romantium design and artwork](docs/romantium.md).
 - Scout both teams, replace individual starters, and undo a cleared lineup.
 - Every one of the 151 Pokémon has one fixed signature ultimate, visible while drafting and scouting. The simulation triggers relevant players’ moves automatically on both teams, adding +12 to their position skills for that play (capped at 99). Each Pokémon can use its ultimate once per set of downs. A first down, change of possession, or halftime kickoff recharges both teams. Ordinary downs and other quarter changes preserve spent charges. Expand **YOUR ULTIMATES** to see readiness; live move callouts, elemental effects and a power-up sound announce activations.
 - Once per quarter, a random **Rival Rumble** cuts to a top-down isometric arena for 6.4 seconds. Two opposing Pokémon trade hits and signature ultimates with visible health bars, then the loser bursts into stylized blood-red pixels, sprite shards and smoke. Football resumes automatically; **Skip battle** returns early. The cutaway does not change the lineup, score, clock, stats or ultimate charges. Pause and reduced effects work in the arena; friend clients agree on fighters and winner.
@@ -68,6 +69,7 @@ node tests/football.cjs
 node tests/stadium-upgrade.cjs
 node tests/stadium.cjs
 node tests/sideline.cjs
+node tests/romantium.cjs
 node tests/dances.cjs
 node tests/battle.cjs
 node tests/fx.cjs
@@ -89,6 +91,7 @@ The checks cover full-game termination and reconciled box scores across 500 game
 | `dist/ultimates.js` | Fixed signature moves for all 151 species and position skill effects |
 | `dist/sim.js` | Roster, ratings, outcomes, and match statistics |
 | `dist/kanto.js` | Bundled traits for all 151 Kanto species |
+| `dist/romantium.js` | Original special robot, signature move and eight-direction pixel rig |
 | `dist/draft.js` | Position projections, unique picks, Auto Draft, and computer rosters |
 | `dist/teams.js` | Gym club rosters, actual ratings and CPU strategy metadata |
 | `dist/team-picker.js` | Two-step team/rival selection, previews and draft integration |

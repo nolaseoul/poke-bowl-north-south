@@ -27,7 +27,7 @@ for(let seed=1;seed<=12;seed++){
   const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeBattle,PokeStadium,PokeTeamName:require('../dist/team-name.js'),PokePvP:require('../dist/pvp-client.js'),PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
   vm.createContext(sandbox);
   sandbox.window.PokeBattle=PokeBattle;sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
-  for(const file of ['sprite-data','sprites','sideline','stadium'])vm.runInContext(fs.readFileSync(require.resolve('../dist/'+file+'.js'),'utf8'),sandbox);
+  for(const file of ['romantium','sprite-data','sprites','sideline','stadium'])vm.runInContext(fs.readFileSync(require.resolve('../dist/'+file+'.js'),'utf8'),sandbox);
   sandbox.PokeStadium=sandbox.window.PokeStadium;
   vm.runInContext(fs.readFileSync(require.resolve('../dist/game.js'),'utf8'),sandbox);
   const draft=new PokeDraft.Draft();draft.autoFill(random);

@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {Match,roster,ultimates}=require('../dist/sim.js');
 const {player,slots}=require('../dist/draft.js');
 const {random}=require('../dist/league.js');
-assert.equal(ultimates.catalog.length,151);assert.equal(new Set(ultimates.catalog.map(u=>u.name)).size,151);
+assert.equal(ultimates.catalog.length,152);assert.equal(new Set(ultimates.catalog.map(u=>u.name)).size,152);
 for(let id=1;id<=151;id++){
  const u=ultimates.signature(id);assert.equal(u.id,id);assert.match(u.color,/^#[0-9a-f]{6}$/i);
  for(const {pos} of slots){const p=player(id,pos);assert.equal(ultimates.signature(p.id),u,'Signature cannot change with position');assert.ok(Object.keys(p.ratings).some(k=>ultimates.boost(p,k)>0));}

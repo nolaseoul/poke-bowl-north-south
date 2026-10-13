@@ -77,7 +77,7 @@ class Match{
  installReceivers(){
   const draft=typeof module!=='undefined'?require('./draft.js'):root.PokeDraft;
   this.teams=this.baseTeams.map((team,t)=>{
-   const used=new Set(team.map(p=>p.id)),bench=draft.pool.filter(p=>!used.has(p.id)).map(p=>draft.player(p.id,'WR')).sort((a,b)=>b.ovr-a.ovr||a.id-b.id).slice(0,2);
+   const used=new Set(team.map(p=>p.id)),bench=draft.pool.filter(p=>!p.custom&&!used.has(p.id)).map(p=>draft.player(p.id,'WR')).sort((a,b)=>b.ovr-a.ovr||a.id-b.id).slice(0,2);
    this.receiverPools[t]=[...team.filter(p=>p.pos==='WR'),team.find(p=>p.pos==='TE'),...bench].map((p,i)=>({...p,receiverDepth:i+1}));
    return[...team,...bench.map((p,i)=>({...p,receiverDepth:i+4,bench:true}))];
   });
@@ -113,7 +113,7 @@ class Match{
  r(){return this.random()}
  pick(a){return a[Math.floor(this.r()*a.length)]}
  rating(p,k,t){ // Position skills and stamina determine outcomes for each drafted team.
- let mod=this.customTeams?0:t===0?(p.side==='offense'?1:-1):(p.side==='offense'?-1:1);let fatigue=Math.min(5,this.plays*.08)*(100-p.ratings.Stamina)/40;return clamp((p.ratings[k]??p.ratings.Awareness)+mod+(this.activeUltimates[t].has(p.id)?ultimates.boost(p,k):0)+(p.ratings.Awareness-80)*.025-fatigue,1,99)}
+ let mod=this.customTeams?0:t===0?(p.side==='offense'?1:-1):(p.side==='offense'?-1:1);let fatigue=Math.min(5,this.plays*.08)*(100-p.ratings.Stamina)/40;return clamp((p.ratings[k]??p.ratings.Awareness)+mod+(this.activeUltimates[t].has(p.id)?ultimates.boost(p,k):0)+(p.ratings.Awareness-80)*.025-fatigue,1,p.id===1001?120:99)}
  mean(ps,k,t){return avg(ps.map(p=>this.rating(p,k,t)))}
  chooseOffense(){if(this.team===1&&this.cpuStyle){const bags={ground:['inside','inside','draw','sweep','outside','quick','action'],air:['deep','deep','seam','slants','quick','screen','action','outside'],trick:['action','action','draw','screen','outside','quick','deep','inside'],blitz:['inside','outside','draw','sweep','quick','slants','screen','deep','seam','action'],balanced:['inside','outside','draw','sweep','quick','slants','screen','deep','seam','action']};return this.pick(bags[this.cpuStyle]||bags.balanced)}const short=this.first-this.ball<4;if(this.r()<(short?.62:.42))return this.pick(['inside','outside','draw','sweep']);return this.pick(['quick','slants','screen','deep','seam','action'])}
  next(call=null,defenseCall=null,targetId=null){if(this.over)return null;if(targetId!==null)firstRead(call,this.lineup(this.team),targetId);if(call!==null&&!Object.hasOwn(calls,call))throw new Error('Unknown play call');if(defenseCall!==null&&!Object.hasOwn(defenseCalls,defenseCall))throw new Error('Unknown defensive play');this.activeUltimates.forEach(set=>set.clear());call=call||this.chooseOffense();defenseCall=defenseCall||this.pick(this.team===0&&this.cpuStyle==='blitz'?['gap','press','press','edge','edge','spy','deep']:Object.keys(defenseCalls));const called=calls[call];const t=this.team,d=1-t,off=this.lineup(t).filter(p=>p.side==='offense'),def=this.lineup(d).filter(p=>p.side==='defense'),qb=off.find(p=>p.pos==='QB'),hb=off.find(p=>p.pos==='HB'),fb=off.find(p=>p.pos==='FB'),ol=off.filter(p=>['LT','LG','C','RG','RT'].includes(p.pos)),rushers=def.filter(p=>['DE','NT','OLB'].includes(p.pos)),db=def.filter(p=>['CB','S'].includes(p.pos));

@@ -10,10 +10,10 @@
   const pos=position.value,query=search.value.trim().toLowerCase().replace(/^#/,''),key=sort.value,skills=sim.specs[pos];
   const rows=draft.pool.filter(p=>(!type.value||p.types.includes(type.value))&&(!query||p.name.toLowerCase().includes(query)||String(p.id).padStart(3,'0').includes(query))).map(p=>draft.player(p.id,pos));
   rows.sort((a,b)=>key==='name'?a.id-b.id:(key==='ovr'?b.ovr-a.ovr:b.ratings[key]-a.ratings[key])||a.id-b.id);
-  body.innerHTML=rows.map(p=>`<tr data-player="${p.id}"><th scope="row"><span class="guide-player"><img src="/assets/${p.id}.png" width="48" height="48" loading="lazy" alt=""><span>${esc(p.name)}<small>#${String(p.id).padStart(3,'0')} · Best OVR: ${best.get(p.id)}</small></span></span></th><td class="guide-ovr">${p.ovr}</td>${skills.map(k=>`<td>${p.ratings[k]}</td>`).join('')}<td>${p.ratings.Speed}</td><td>${p.ratings.Strength}</td><td>${esc(sim.ultimates.signature(p.id).name)}</td></tr>`).join('');
+  body.innerHTML=rows.map(p=>`<tr data-player="${p.id}"><th scope="row"><span class="guide-player"><img src="/assets/${p.id}.png" width="48" height="48" loading="lazy" alt=""><span>${esc(p.name)}<small>${p.custom?'ORIGINAL':'#'+String(p.id).padStart(3,'0')} · Best OVR: ${best.get(p.id)}</small></span></span></th><td class="guide-ovr">${p.ovr}</td>${skills.map(k=>`<td>${p.ratings[k]}</td>`).join('')}<td>${p.ratings.Speed}</td><td>${p.ratings.Strength}</td><td>${esc(sim.ultimates.signature(p.id).name)}</td></tr>`).join('');
   skills.forEach((k,i)=>document.getElementById('ratingsSkill'+i).textContent=k);
   const label=position.selectedOptions[0].textContent.split(' · ')[1];
-  caption.textContent=label+' ratings · 1–99 scale';
+  caption.textContent=label+' ratings · 1–99 scale; Romantium 100 OVR, 110 Speed/Strength';
   count.textContent=rows.length+' Pokémon · '+pos+' ratings · '+(key==='name'?'Pokédex order':'highest '+(key==='ovr'?'OVR':key)+' first');
   document.getElementById('ratingsEmpty').hidden=rows.length!==0;
  }

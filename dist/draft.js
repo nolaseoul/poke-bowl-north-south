@@ -1,10 +1,12 @@
 /* Fictional football projections derived from bundled species traits. */
 (function(root){
   const sim=typeof module!=='undefined'?require('./sim.js'):root.PokeSim;
-  const rows=typeof module!=='undefined'?require('./kanto.js'):root.PokeKanto;
+  const original=typeof module!=='undefined'?require('./kanto.js'):root.PokeKanto;
+  const robot=typeof module!=='undefined'?require('./romantium.js'):root.PokeRomantium;
+  const rows=original.concat([robot.row]);
   const positions=['QB','WR','WR','TE','HB','FB','LT','LG','C','RG','RT','DE','NT','DE','OLB','OLB','ILB','ILB','CB','CB','S','S'];
   const slots=positions.map((pos,index)=>({pos,index,side:index<11?'offense':'defense',label:pos+(positions.filter(p=>p===pos).length>1?' '+positions.slice(0,index+1).filter(p=>p===pos).length:'')}));
-  const pool=rows.map(([id,name,types,weight,hp,attack,defense,special,specialDefense,speed])=>({id,name,types,weight,hp,attack,defense,special,specialDefense,speed}));
+  const pool=rows.map(([id,name,types,weight,hp,attack,defense,special,specialDefense,speed])=>({id,name,types,weight,hp,attack,defense,special,specialDefense,speed,...(id===robot.ID?{custom:true}:{})}));
   const byId=new Map(pool.map(p=>[p.id,p]));
   const clamp=v=>Math.round(Math.max(1,Math.min(99,v)));
   const mean=ps=>ps.length?Math.round(ps.reduce((sum,p)=>sum+p.ovr,0)/ps.length):0;
@@ -34,18 +36,19 @@
       };
       const ratings={Speed:speed,Strength:strength,Agility:agility,Stamina:stamina,Awareness:awareness};
       sim.specs[pos].forEach(k=>ratings[k]=clamp(skills[k]));
+      if(id===robot.ID){ratings.Speed=110;ratings.Strength=110;ratings.Agility=99;ratings.Stamina=99;ratings.Awareness=99;sim.specs[pos].forEach(k=>ratings[k]=99)}
       const athletic=['WR','CB'].includes(pos)?speed*.6+agility*.4:['LT','LG','C','RG','RT','NT','DE','FB'].includes(pos)?strength*.75+stamina*.25:(awareness+stamina)/2;
       const values=sim.specs[pos].map(k=>ratings[k]);
       const ovr=clamp((values[0]*.4+values[1]*.35+values[2]*.25)*.8+athletic*.2);
       const note=`${pokemon.name} projects at ${pos} through ${sim.specs[pos].join(', ').toLowerCase()}. ${speed>=85?'Explosive pace opens up the field.':strength>=85?'Physical strength wins contact.':awareness>=85?'Anticipation is the strongest asset.':'A developing prospect with room to grow.'}`;
-      cache.set(key,{id,name:pokemon.name,pos,side:slots.find(s=>s.pos===pos).side,types:pokemon.types.slice(),ratings:original?{...original.ratings}:ratings,ovr:original?original.ovr:ovr,note:original?original.note:note});
+      cache.set(key,{id,name:pokemon.name,pos,side:slots.find(s=>s.pos===pos).side,types:pokemon.types.slice(),ratings:original?{...original.ratings}:ratings,ovr:id===robot.ID?100:original?original.ovr:ovr,...(id===robot.ID?{custom:true}:{}),note:id===robot.ID?"Romantium is an original Steel/Electric robot. Jet boots and servo-powered armor give him the league’s highest base Speed and Strength: 110 each. Quantum Overdrive charges his reactor and boosts his position skills once per set of downs.":original?original.note:note});
     }
     const p=cache.get(key);
     return {...p,ratings:{...p.ratings},types:p.types.slice()};
   }
   function valid(ids){return Array.isArray(ids)&&ids.length===22&&ids.every(id=>id===null||byId.has(id))&&new Set(ids.filter(id=>id!==null)).size===ids.filter(id=>id!==null).length;}
   function choose(pos,used,random){
-    const candidates=pool.filter(p=>!used.has(p.id)).map(p=>player(p.id,pos)).sort((a,b)=>b.ovr-a.ovr||a.id-b.id);
+    const candidates=pool.filter(p=>!p.custom&&!used.has(p.id)).map(p=>player(p.id,pos)).sort((a,b)=>b.ovr-a.ovr||a.id-b.id);
     return candidates[Math.min(4,Math.floor(random()*5))].id;
   }
   class Draft{

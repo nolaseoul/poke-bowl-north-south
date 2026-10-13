@@ -44,9 +44,10 @@ const second=await PvP.RoomClient.create(ids,'Second duel',{fetch:fetcher,storag
 const old=await room.state.storage.get('room');old.expires=Date.now()-1;await room.state.storage.put('room',old);await assert.rejects(host.poll(),/expired/);await room.object.alarm();assert.equal(await room.state.storage.get('room'),undefined);
 const forbidden=await fetcher('/api/rooms',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://evil.test'},body:JSON.stringify({lineup:ids})});assert.equal(forbidden.status,403);
 // New clients play the complete football flow; old rooms above retain their original replay rules.
-const full=await PvP.RoomClient.create(ids,'Coin toss crew',{fetch:fetcher,storage:stores[0]}),otherFull=new PvP.RoomClient(full.id,{fetch:fetcher,storage:stores[1]});await otherFull.join(opponent,'Meter masters');const fullRoom=rooms.get(full.id),newState=await fullRoom.state.storage.get('room');newState.seed=13;await fullRoom.state.storage.put('room',newState);
+const robotIds=ids.slice();robotIds[1]=1001;
+const full=await PvP.RoomClient.create(robotIds,'Coin toss crew',{fetch:fetcher,storage:stores[0]}),otherFull=new PvP.RoomClient(full.id,{fetch:fetcher,storage:stores[1]});await otherFull.join(opponent,'Meter masters');const fullRoom=rooms.get(full.id),newState=await fullRoom.state.storage.get('room');newState.seed=13;await fullRoom.state.storage.put('room',newState);
 let fullView=await full.poll(),fullRounds=0,sawReturnScore=false,sawReserveTarget=false;const stages=new Set(),fullCoaches=[full,otherFull];
-assert.equal(newState.rulesVersion,4);assert.equal(fullView.snapshot.stadiumRules,true);assert.equal(fullView.snapshot.phase,'coinToss');assert.equal(PvP.rotate(await otherFull.poll()).snapshot.actionTeam,1,'The visiting coach waits for the host to call the coin');
+assert.equal(newState.rulesVersion,4);assert.equal(fullView.snapshot.stadiumRules,true);assert.equal(fullView.snapshot.stats[0][1001].returns,0);assert.equal(fullView.snapshot.phase,'coinToss');assert.equal(PvP.rotate(await otherFull.poll()).snapshot.actionTeam,1,'The visiting coach waits for the host to call the coin');
 while(fullView.state!=='finished'){
  const s=fullView.snapshot;stages.add(s.phase);
  if(s.actionTeam!==null){
@@ -62,7 +63,7 @@ while(fullView.state!=='finished'){
   await fullCoaches[offense].call(fullRounds,call,target);const hidden=await fullCoaches[1-offense].poll();assert.equal(JSON.stringify(hidden).includes('\"target\":'),false,'Rotating target stays private until both calls lock');
   await fullCoaches[1-offense].call(fullRounds,defense);
  }
- fullRounds++;assert.ok(fullRounds<200);fullView=await full.poll();const theirs=await otherFull.poll();assert.deepEqual(theirs.snapshot,fullView.snapshot);assert.equal(fullView.round,fullRounds);
+ fullRounds++;assert.ok(fullRounds<200);fullView=await full.poll();if(fullRounds===3)assert.equal(fullView.events[0].event.returner,1001,'The custom robot returns the opening kick in a real friend duel');const theirs=await otherFull.poll();assert.deepEqual(theirs.snapshot,fullView.snapshot);assert.equal(fullView.round,fullRounds);
  const rotated=PvP.rotate(theirs);assert.deepEqual(rotated.snapshot.offensiveSnaps,[...fullView.snapshot.offensiveSnaps].reverse());
  const resolved=fullView.events[0].event,flippedEvent=rotated.events[0].event;if(resolved.scoringTeam!=null){sawReturnScore=true;assert.equal(flippedEvent.scoringTeam,resolved.scoringTeam^1);assert.equal(flippedEvent.receivingTeam,resolved.receivingTeam^1);assert.deepEqual(flippedEvent.returnUnitIds,resolved.returnUnitIds);assert.equal(fullView.snapshot.team,resolved.scoringTeam);assert.equal(fullView.snapshot.phase,'conversion');}
  assert.deepEqual(rotated.snapshot.score,[...fullView.snapshot.score].reverse());if(fullView.snapshot.actionTeam!==null)assert.equal(rotated.snapshot.actionTeam,fullView.snapshot.actionTeam^1);

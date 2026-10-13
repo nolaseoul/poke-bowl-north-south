@@ -23,7 +23,7 @@
    for(const [slot,pokemon] of club.anchors){ids[slot]=pokemon;used.add(pokemon)}
    for(const slot of draft.slots){
     if(ids[slot.index]!==null)continue;
-    const candidates=draft.pool.filter(p=>!used.has(p.id)).map(p=>({id:p.id,score:Math.abs(draft.player(p.id,slot.pos).ovr-club.target)*1.3-(p.types.includes(club.type)?13:0)}));
+    const candidates=draft.pool.filter(p=>!p.custom&&!used.has(p.id)).map(p=>({id:p.id,score:Math.abs(draft.player(p.id,slot.pos).ovr-club.target)*1.3-(p.types.includes(club.type)?13:0)}));
     candidates.sort((a,b)=>a.score-b.score||a.id-b.id);ids[slot.index]=candidates[0].id;used.add(candidates[0].id);
    }
    rosters.set(id,ids);

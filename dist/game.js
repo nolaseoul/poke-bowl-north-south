@@ -31,7 +31,7 @@ $('music').onclick=()=>{musicTouched=true;musicWanted=!music.enabled;saveAudioPr
 $('track').onchange=()=>{music.setTrack($('track').value);saveAudioPref('track',music.track);musicTouched=true;musicWanted=true;saveAudioPref('music','on');enableMusic()};
 $('musicVolume').oninput=()=>{let value=+$('musicVolume').value;music.setVolume(value/100);$('volumeValue').textContent=value+'%';saveAudioPref('volume',value)};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){music.stop();fieldFX.stop()}else{if(musicWanted)enableMusic();enableFX()}});
-const skill=(name,value)=>`<div class="skill"><span>${name}</span><span class="meter"><i style="width:${value}%"></i></span><b>${value}</b></div>`;
+const skill=(name,value)=>`<div class="skill"><span>${name}</span><span class="meter"><i style="width:${Math.min(100,value)}%"></i></span><b>${value}</b></div>`;
 function ultimateBadge(p){const u=ultimates.signature(p.id);return `<div class="ultimate-badge" style="--ultimate:${u.color}" title="${ultimates.description(p)}"><b>✦ ${u.name}</b><small>ONLY ULTIMATE · 1 / SET OF DOWNS</small></div>`}
 function playerHeader(p){return `<div class="card-top"><img src="assets/portraits/${p.id}.png" alt=""><div><h3>${p.name}</h3><small>${p.pos} · ${p.side.toUpperCase()}</small></div><div class="ovr">${p.ovr}<small>OVR</small></div></div>${ultimateBadge(p)}`}
 function teamRoster(t){return match.stadiumRules?match.teams[t]:squads[t]}

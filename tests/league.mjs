@@ -69,5 +69,10 @@ const stadiumTicket=(await request('matches','POST',{lineup:ids,rulesVersion:4})
 const stadiumGame=new sim.Match(rules.random(stadiumTicket.seed),{teams:rules.teams(ids,stadiumTicket.seed),footballFlow:true,stadiumRules:true}),stadiumHistory=[];
 while(!stadiumGame.over){if(stadiumGame.actor()!==null){stadiumHistory.push(null);stadiumGame.next()}else if(stadiumGame.team===0){const target=stadiumGame.lineup(0).filter(p=>['WR','TE'].includes(p.pos))[stadiumGame.plays%3].id;stadiumHistory.push({offense:'quick',target});stadiumGame.next('quick',null,target)}else{stadiumHistory.push({defense:'deep'});stadiumGame.next(null,'deep')}}
 assert.equal((await request('matches/'+stadiumTicket.id+'/finish','POST',{calls:stadiumHistory,score:stadiumGame.score})).status,200,'Version-4 rotations and returns save through the ranked endpoint');assert.equal(JSON.parse(sql.prepare('SELECT lineup FROM matches WHERE id=?').get(stadiumTicket.id).lineup).rulesVersion,4);
+const robotIds=ids.slice();robotIds[1]=1001;
+const robotTicket=(await request('matches','POST',{lineup:robotIds,rulesVersion:4})).data;assert.equal(robotTicket.rulesVersion,4);
+const robotGame=new sim.Match(rules.random(robotTicket.seed),{teams:rules.teams(robotIds,robotTicket.seed),footballFlow:true,stadiumRules:true}),robotCalls=[];
+while(!robotGame.over){if(robotGame.actor()!==null){robotCalls.push(null);robotGame.next()}else if(robotGame.team===0){robotCalls.push({offense:'quick',target:1001});robotGame.next('quick',null,1001)}else{robotCalls.push({defense:'deep'});robotGame.next(null,'deep')}}
+assert.equal((await request('matches/'+robotTicket.id+'/finish','POST',{calls:robotCalls,score:robotGame.score})).status,200,'Romantium games save through the real ranked API');
 const unconfigured=await handler(new Request('https://bowl.test/api/profile'),{...env,SUPABASE_URL:''});assert.equal(unconfigured.status,503);
 console.log('PASS: 50 deterministic ranked games and eight persisted gym matchups, session verification, guest exclusion, account isolation, country profiles, persistent SQL standings, forged score rejection, completed-only saving and idempotent retries.');sql.close();
