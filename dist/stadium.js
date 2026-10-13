@@ -3,13 +3,14 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dances=typeof module!=='undefined'?require('./dances.js'):root.PokeDances;
 const battles=typeof module!=='undefined'?require('./battle.js'):root.PokeBattle;
+const sidelines=typeof module!=='undefined'?require('./sideline.js'):root.PokeSideline;
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
 // Keep the line, both units and the scoring end zone in view, in either direction.
 function goalpostSize(extraPoint=false){return extraPoint?{halfWidth:78,stem:48,crossbar:88,height:210,line:7}:{halfWidth:27,stem:30,crossbar:28,height:61,line:4}}
 function cameraFor(yard){return clamp(yard+(yard>=78?8:4),12,98)}
 class Stadium{
  constructor(canvas,images){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;this.sprites=root.PokeSprites?new root.PokeSprites.SpriteBank():null;
+  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.images=images;this.sideline=sidelines?new sidelines.SidelineChase():null;this.sprites=root.PokeSprites?new root.PokeSprites.SpriteBank():null;
   this.scale=Math.min(2,Math.max(1,root.devicePixelRatio||1));canvas.width=1120*this.scale;canvas.height=640*this.scale;
   this.backdrop=null;if(root.Image){this.backdrop=new root.Image();this.backdrop.src='assets/stadium-grandstand-v1.webp';}
  }
@@ -87,6 +88,7 @@ class Stadium{
   // Cloth strips ripple with the stadium breeze, even while awaiting a play call.
   [69,219,365,757,900,1050].forEach((x,i)=>{const y=209+(i%2)*13;ctx.fillStyle='#d6d8c8';ctx.fillRect(x,y-33,2,44);for(let strip=0;strip<8;strip++){const lift=Math.sin(t*4+i+strip*.55)*3;ctx.fillStyle=strip%3===1?'#e9e9cb':i<3?'#4597df':'#ee7169';ctx.fillRect(x+2+strip*4,y-32+lift,4,17);}});
   if(s.fullEffects&&!s.paused)for(let i=0;i<9;i++){if(Math.sin(t*2.3+i*21.7)>.995){const x=52+(i*137)%1050,y=98+(i%3)*44;ctx.fillStyle='#fff4d0';ctx.fillRect(x-3,y,7,2);ctx.fillRect(x,y-3,2,7);}}
+  this.sideline?.draw(ctx,t,s.fullEffects);
   ctx.fillStyle='#0b1828';ctx.fillRect(452,25,213,38);ctx.strokeStyle='#55738c';ctx.lineWidth=1;ctx.strokeRect(452,25,213,38);ctx.textAlign='center';ctx.font='bold 9px monospace';ctx.fillStyle='#b5d1e8';ctx.fillText('P O K É  S T A D I U M',560,37);ctx.font='bold 15px monospace';const score=s.event&&s.phase<s.motion.resolveAt?(s.event.scoreBefore??s.score):s.score;ctx.fillStyle='#d0f3e7';ctx.font='bold 10px monospace';ctx.fillText(score?`${(s.names?.[0]||'Kanto Blue').toUpperCase()} ${String(score[0]).padStart(2,'0')} : ${String(score[1]).padStart(2,'0')} ${(s.names?.[1]||'Rocket Red').toUpperCase()}`:'KANTO LEAGUE',560,55,199);
   if(s.celebration)this.victoryScreen(s);
   ctx.fillStyle='#162c39';ctx.fillRect(0,260,1120,13);ctx.fillStyle='#92bdc4';ctx.fillRect(0,268,1120,2);

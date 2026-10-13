@@ -35,3 +35,24 @@ ultimate recharge rules continue exactly where the football play left them.
 rotation, monotone health/KO, cue boundaries and finite rendering. The browser
 loop test checks 48 actual rumbles at 4×, their real-time duration, pause and
 unchanged scores, stats, plays and ranked histories during each cutaway.
+
+## Team Rocket sideline cameo
+
+`sideline.js` draws Jessie and James chasing the existing PMDCollab Meowth
+sprite along the far touchline. The two humans are original code-drawn pixel
+interpretations with four distinct running poses, white uniforms/red R marks,
+magenta/lilac hair, alternating knees and reaching arms. An attempted ImageGen
+atlas was rejected by the image service; no generated sheet is shipped.
+Meowth retains the existing animation attribution and license.
+
+The ambient-time loop has a 19-second pass and a five-second off-screen gap,
+reversing direction each time. Dust and a short “MEOWTH!!” bubble accompany
+the chase. It draws in screen space behind the football field and scoreboard,
+so camera/possession changes do not reverse it or cover the Dance Cam. The
+trio uses its own SpriteBank to preserve the field players' cached facing.
+Pause freezes ambient time; reduced effects park the trio. No simulation RNG,
+players, scores, stats, ranked histories or server logic are changed.
+
+`tests/sideline.cjs` verifies chase order, both directions, four human running
+poses, off-screen gaps, reduced effects, finite rendering and isolated facing.
+The complete browser-loop check also includes the cameo throughout 12 games.

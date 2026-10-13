@@ -41,6 +41,8 @@ jobs:
         run: node tests/football.cjs
       - name: Validate receiver rotations and chaotic special teams
         run: node tests/stadium-upgrade.cjs
+      - name: Validate the Rocket sideline chase and independent sprite facing
+        run: node tests/sideline.cjs
       - name: Validate stadium artwork and crowd behavior
         run: node tests/stadium.cjs
       - name: Validate stereo soundtrack, PCM instruments and controls
