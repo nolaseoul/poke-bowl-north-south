@@ -1,0 +1,10 @@
+{
+  "name": "poke-bowl-north-south",
+  "private": true,
+  "scripts": {
+    "build:auth": "esbuild client/auth-entry.js --bundle --format=iife --global-name=PokeAuthSDK --minify --legal-comments=eof --outfile=dist/auth-sdk.js",
+    "test:league": "node tests/league.mjs"
+  },
+  "dependencies": {"@supabase/supabase-js": "2.117.3"},
+  "devDependencies": {"esbuild": "0.28.2"}
+}

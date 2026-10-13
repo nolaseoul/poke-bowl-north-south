@@ -1,22 +1,87 @@
 # Cloudflare deployment
 
-Public game: https://poke-bowl-north-south.freshcut-revival.workers.dev/
+Custom game addresses: https://www.pokeball.gg/ and https://pokeball.gg/
 
-Cloudflare project: `poke-bowl-north-south` (Workers Static Assets).
-The complete browser game is in `dist/`. No build step or login is required to play.
-Only `dist/` is uploaded; tests and hosting configuration stay local.
+Fallback: https://poke-bowl-north-south.freshcut-revival.workers.dev/
 
-To check and publish an update from this directory:
+Domain registration stays at Namecheap. Authoritative DNS uses Cloudflare:
+`lindsey.ns.cloudflare.com` and `tim.ns.cloudflare.com`. Both hostnames are
+Worker custom domains declared in `wrangler.jsonc`; keep them on future deploys.
+The zone uses the Free plan. Nameservers were saved on October 11, 2026;
+DNS and HTTPS were verified live on both hostnames on October 11, 2026.
+
+Cloudflare project: `poke-bowl-north-south` (Worker + Static Assets).
+Private PvP rooms: SQLite Durable Object `PvPRoom`, binding `PVP` (12-hour expiry).
+D1 database: `poke-bowl-league`, binding `LEAGUE`.
+The browser game is in `dist/`; the API is in `worker/index.mjs`.
+No login is required to play as a guest. Guest results are not saved.
+
+## Local preview
 
 ```sh
+npx wrangler@4.149.0 d1 migrations apply LEAGUE --local
+npx wrangler@4.149.0 dev --port 8787
+```
+
+For real Auth, copy `.dev.vars.example` to the ignored `.dev.vars` and fill in
+only the project's publishable configuration. See [account setup](docs/accounts.md).
+Without that configuration, guest play and the empty real leaderboard work;
+account sign-in stays clearly marked pending.
+
+The committed browser Auth bundle is generated from pinned dependencies:
+
+```sh
+npm ci --ignore-scripts
+npm run build:auth
+```
+
+Only regenerate it when the Auth SDK or client entry changes. Never place
+provider secrets or service-role keys in `dist/` or public configuration.
+
+## Check and publish
+
+Regenerate the public guides after changing game rules, rosters or ratings.
+The generated HTML is committed so crawlers can read it without JavaScript.
+
+```sh
+node scripts/build-guides.cjs
 node tests/game.cjs
 node tests/motion.cjs
 node tests/music.cjs
 node tests/draft.cjs
+node tests/teams.cjs
 node tests/render.cjs
+node tests/playbook.cjs
+node tests/stadium.cjs
+node tests/fx.cjs
+node tests/sprites.cjs
+node tests/account.cjs
+node tests/league.mjs
+node tests/team-links.cjs
+node tests/blocking.cjs
+node tests/pvp.mjs
+npx wrangler@4.149.0 d1 migrations apply LEAGUE --remote
 npx wrangler@4.149.0 deploy --config wrangler.jsonc
 ```
 
 Use `npx wrangler@4.149.0 login` if the Cloudflare CLI session has expired.
-The Wrangler configuration enables the public `workers.dev` URL. Select the intended
-Cloudflare account when prompted if your login has access to multiple accounts.
+Select the intended account if prompted. Preserve the existing D1 database ID;
+do not create another database for each release. Migrations run before deploying
+code that depends on their tables. `0002_match_opponents.sql` stores each ranked
+match’s chosen gym rival; existing tickets continue to use random opponents.
+
+Set `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `GOOGLE_ENABLED` as Worker
+variables after the managed Auth project/providers are configured. Their purpose
+and exact redirect URLs are documented in [docs/accounts.md](docs/accounts.md).
+Provider client secrets belong only in Supabase's protected provider settings.
+
+Public API checks after publishing:
+
+- `/api/config`: returns publishable configuration, never private credentials
+- `/api/leaderboard`: real standings, initially an empty `players` list
+- `/api/profile`: rejects a request without a valid signed-in session
+- Friend duel: create invite, join in a second browser, lock both hidden calls, verify mirrored scores, refresh/rejoin and independent replay skipping
+- Team sharing: Unicode name and all 22 ordered starters survive a shared-link import
+- New guest: country selection, kickoff, full game, explicit unsaved-result notice
+- Configured Auth: email confirmation/login, Google return, profile restore,
+  completed-match saving, second-device record and leaderboard

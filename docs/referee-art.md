@@ -1,0 +1,9 @@
+# Stadium referee artwork
+
+Created with the built-in ImageGen tool. The trainer-inspired first attempt was rejected by the image service; the shipped character is an original adult referee with a plain red cap, striped shirt and navy trousers.
+
+Asset: `dist/assets/stadium-referee-v1.webp` (1500 × 375, four transparent square atlas cells). Left to right: coin toss, touchdown, successful kick, no good. Generated unequal gutters were normalized into equal cells, then scaled with nearest-neighbor sampling and encoded as WebP for mobile loading. The illustration itself is unchanged. CSS selects a pose and adds a short cheer animation; reduced-motion preferences disable it.
+
+## Final generation prompt
+
+Game asset: one transparent PNG sprite sheet, four equally sized full-body poses of one ORIGINAL ADULT FOOTBALL REFEREE in a single horizontal row. No franchise characters or logos. Character is a cheerful adult male official age 35 with short dark hair, simple plain red baseball cap, black-and-white striped referee shirt, navy blue trousers, white sneakers, silver whistle. Charming polished 16-bit SNES pixel art with crisp square pixels, expressive readable face and rich shading. Every pose faces front in the same size and on the same baseline. Pose 1 in left quarter: holding up a gold coin, other hand on hip. Pose 2 second quarter: both arms raised straight overhead signaling touchdown, excited smile. Pose 3 third quarter: both arms raised with a joyful raised knee, successful kick signal, delighted smile. Pose 4 fourth quarter: both arms stretched straight horizontally to the sides, no-good signal, mouth open calling. Equal quarter-width slots, generous transparent gutters, all limbs and cap fully visible inside each slot. No background, field, border, text, lettering, other people or marks.

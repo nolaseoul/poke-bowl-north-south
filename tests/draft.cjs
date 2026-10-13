@@ -2,11 +2,11 @@ const assert=require('node:assert/strict');
 const {pool,slots,player,Draft,valid}=require('../dist/draft.js');
 const {roster,specs,Match}=require('../dist/sim.js');
 const {PlayMotion}=require('../dist/motion.js');
-assert.equal(pool.length,151);assert.equal(new Set(pool.map(p=>p.id)).size,151);
+assert.equal(pool.length,152);assert.equal(new Set(pool.map(p=>p.id)).size,152);
 for(const p of pool)for(const pos of Object.keys(specs)){
   const prospect=player(p.id,pos);assert.equal(Object.keys(prospect.ratings).length,8);
-  for(const value of Object.values(prospect.ratings))assert.ok(Number.isInteger(value)&&value>=1&&value<=99);
-  assert.ok(prospect.ovr>=1&&prospect.ovr<=99);assert.equal(prospect.id,p.id);
+  for(const value of Object.values(prospect.ratings))assert.ok(Number.isInteger(value)&&value>=1&&value<=(p.id===1001?110:99));
+  assert.ok(prospect.ovr>=1&&prospect.ovr<=(p.id===1001?100:99));assert.equal(prospect.id,p.id);
 }
 for(const p of roster)assert.deepEqual(player(p.id,p.pos).ratings,p.ratings);
 assert.notEqual(player(135,'WR').ovr,player(135,'NT').ovr);

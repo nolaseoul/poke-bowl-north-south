@@ -1,0 +1,9 @@
+# Stadium grandstand artwork
+
+Created with the built-in ImageGen tool for the 16-bit stadium upgrade.
+
+Final game asset: `dist/assets/stadium-grandstand-v1.webp` (2172 × 724, 714,274 bytes). The generated PNG was converted to WebP without resizing for faster loading on mobile. The game overlays the scoreboard, moving spectators, flags and camera flashes.
+
+## Final generation prompt
+
+Use case: stylized-concept. Asset type: panoramic background art for a side-on 16-bit creature football browser game. Create a polished densely detailed 16-bit pixel art stadium grandstand, premium modern pixel-art game finish, crisp square pixels and rich painterly lighting expressed as pixel clusters. Extremely wide horizontal panorama, 3:1 composition. Camera looks straight across a football field at the opposite grandstand, no perspective vanishing point, horizontal rows spanning the full image. Packed stadium of recognizable tiny human fans and friendly colorful little creature spectators: heads, hair, faces, jackets, scarves, raised arms, cheering. Left half predominantly cobalt/teal supporters, right half warm coral/red supporters; diverse skin tones and clothing. Several deep tiers of stands separated by concrete concourses, stairs and railings; illuminated suites along the upper rim. Four tall stadium floodlight towers, roof canopy, sunset indigo and peach sky with a tree line behind. Near the bottom front barrier, blank blue and red banner panels, camera operators and staff, no football field. Large blank dark scoreboard centered on the upper grandstand with a clean empty face for game-drawn text. Bright warm stadium lights, attractive blue/coral contrast, atmospheric depth. Crowd must occupy the lower 70 percent of this image and be visibly people rather than dots or geometric rectangles. Full bleed edge to edge, no border. No text, lettering, logos, watermarks, UI or playable athletes.

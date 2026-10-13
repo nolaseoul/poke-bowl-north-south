@@ -19,9 +19,49 @@ jobs:
         run: node tests/game.cjs
       - name: Validate drafting and distinct team matchups
         run: node tests/draft.cjs
+      - name: Validate Romantium, custom match replays and historical compatibility
+        run: node tests/romantium.cjs
+      - name: Validate gym clubs, opponent strategies and verified matches
+        run: node tests/teams.cjs
+      - name: Validate signature ultimates and recharge rules
+        run: node tests/ultimates.cjs
+      - name: Validate defensive counters and QB ultimate hits
+        run: node tests/defense.cjs
+      - name: Validate quarterly isometric battles and football isolation
+        run: node tests/battle.cjs
+      - name: Validate signature dances and synchronized stadium screen
+        run: node tests/dances.cjs
       - name: Validate animation frames
         run: node tests/motion.cjs
       - name: Validate complete browser rendering and replay transitions
         run: node tests/render.cjs
-      - name: Validate chiptune scheduling and controls
+      - name: Validate play calls and horizontal projection
+        run: node tests/playbook.cjs
+      - name: Validate receiver choices and ranked target histories
+        run: node tests/receiver-target.cjs
+      - name: Validate legacy football flow and conversions
+        run: node tests/football.cjs
+      - name: Validate receiver rotations and chaotic special teams
+        run: node tests/stadium-upgrade.cjs
+      - name: Validate the Rocket sideline chase and independent sprite facing
+        run: node tests/sideline.cjs
+      - name: Validate stadium artwork and crowd behavior
+        run: node tests/stadium.cjs
+      - name: Validate stereo soundtrack, PCM instruments and controls
         run: node tests/music.cjs
+      - name: Validate synchronized game effects and cadence
+        run: node tests/fx.cjs
+      - name: Validate all eight-direction character animations
+        run: node tests/sprites.cjs
+      - name: Validate detailed portraits and readable elemental ultimates
+        run: node tests/presentation.cjs
+      - name: Validate account flows and guest exclusion
+        run: node tests/account.cjs
+      - name: Validate server-verified results and persistent standings
+        run: node tests/league.mjs
+      - name: Validate team names and roster share links
+        run: node tests/team-links.cjs
+      - name: Validate paired line blocking and defender releases
+        run: node tests/blocking.cjs
+      - name: Validate private two-coach PvP matches and durable rooms
+        run: node tests/pvp.mjs
