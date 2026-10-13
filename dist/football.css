@@ -23,3 +23,9 @@
 .paused .referee-sprite,.paused.football-step .football-coin,.referee-call.paused{animation-play-state:paused}.reduced .referee-sprite{animation:none}
 @media(max-width:680px){.referee-call{top:13%;right:7px;gap:4px;padding:3px 8px 3px 0;max-width:48%;border-radius:7px}.referee-call .referee-sprite{width:60px;height:60px}.referee-call small{font-size:6px;letter-spacing:0}.referee-call strong{font-size:17px}.toss-official{margin:-4px 0 4px}.toss-official .referee-sprite{width:49px;height:49px}.toss-official b{font-size:7px;max-width:80px}.football-step:has(.toss-official:not([hidden])) .football-coin{position:absolute;left:calc(50% - 57px);top:35px;width:22px;height:22px;font-size:14px;line-height:14px;border-width:2px;margin:0}}
 @media(prefers-reduced-motion:reduce){.referee-call,.referee-call .referee-sprite{animation:none}}
+
+/* During scoring, the official stays in a corner clear of the central dance card. */
+.referee-call.with-score{top:auto;bottom:8px;right:8px;max-width:28%;padding:3px 9px 3px 0;border-width:1px;z-index:4}.referee-call.with-score .referee-sprite{width:58px;height:58px}.referee-call.with-score strong{font:800 13px/1.1 var(--font-ui)}.referee-call.with-score small{font-size:7px}
+@media(max-width:680px){.referee-call.with-score{right:5px;bottom:5px;max-width:25%;padding:2px 4px;gap:2px}.referee-call.with-score .referee-sprite{width:28px;height:28px}.referee-call.with-score strong{font-size:8px}.referee-call.with-score small{display:none}}
+
+.referee-call.with-score.score-red{left:8px;right:auto}@media(max-width:680px){.referee-call.with-score.score-red{left:5px;right:auto}}

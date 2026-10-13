@@ -48,7 +48,7 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
   if(path==='/api/matches'&&method==='POST'){
    if(!await profile(env.LEAGUE,userId))fail('Choose your name and country first.',409);
    const data=await body(request),seed=crypto.getRandomValues(new Uint32Array(1))[0];const opponent=data.opponent??'random';teams(data.lineup,seed,opponent);
-   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup,opponent) VALUES(?,?,?,?,?)').bind(id,userId,seed,JSON.stringify(data.rulesVersion===3?{ids:data.lineup,rulesVersion:3}:data.lineup),opponent).run();return json({id,seed,opponent,rulesVersion:data.rulesVersion===3?3:1,owner:userId},201);
+   const id=crypto.randomUUID();await env.LEAGUE.prepare('INSERT INTO matches(id,user_id,seed,lineup,opponent) VALUES(?,?,?,?,?)').bind(id,userId,seed,JSON.stringify([3,4].includes(data.rulesVersion)?{ids:data.lineup,rulesVersion:data.rulesVersion}:data.lineup),opponent).run();return json({id,seed,opponent,rulesVersion:[3,4].includes(data.rulesVersion)?data.rulesVersion:1,owner:userId},201);
   }
   const finish=path.match(/^\/api\/matches\/([a-f0-9-]{36})\/finish$/);
   if(finish&&method==='POST'){

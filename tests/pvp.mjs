@@ -44,26 +44,31 @@ const second=await PvP.RoomClient.create(ids,'Second duel',{fetch:fetcher,storag
 const old=await room.state.storage.get('room');old.expires=Date.now()-1;await room.state.storage.put('room',old);await assert.rejects(host.poll(),/expired/);await room.object.alarm();assert.equal(await room.state.storage.get('room'),undefined);
 const forbidden=await fetcher('/api/rooms',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://evil.test'},body:JSON.stringify({lineup:ids})});assert.equal(forbidden.status,403);
 // New clients play the complete football flow; old rooms above retain their original replay rules.
-const full=await PvP.RoomClient.create(ids,'Coin toss crew',{fetch:fetcher,storage:stores[0]}),otherFull=new PvP.RoomClient(full.id,{fetch:fetcher,storage:stores[1]});await otherFull.join(opponent,'Meter masters');const fullRoom=rooms.get(full.id),newState=await fullRoom.state.storage.get('room');newState.seed=11;await fullRoom.state.storage.put('room',newState);
-let fullView=await full.poll(),fullRounds=0;const stages=new Set(),fullCoaches=[full,otherFull];
-assert.equal(fullView.snapshot.phase,'coinToss');assert.equal(PvP.rotate(await otherFull.poll()).snapshot.actionTeam,1,'The visiting coach waits for the host to call the coin');
+const full=await PvP.RoomClient.create(ids,'Coin toss crew',{fetch:fetcher,storage:stores[0]}),otherFull=new PvP.RoomClient(full.id,{fetch:fetcher,storage:stores[1]});await otherFull.join(opponent,'Meter masters');const fullRoom=rooms.get(full.id),newState=await fullRoom.state.storage.get('room');newState.seed=13;await fullRoom.state.storage.put('room',newState);
+let fullView=await full.poll(),fullRounds=0,sawReturnScore=false,sawReserveTarget=false;const stages=new Set(),fullCoaches=[full,otherFull];
+assert.equal(newState.rulesVersion,4);assert.equal(fullView.snapshot.stadiumRules,true);assert.equal(fullView.snapshot.phase,'coinToss');assert.equal(PvP.rotate(await otherFull.poll()).snapshot.actionTeam,1,'The visiting coach waits for the host to call the coin');
 while(fullView.state!=='finished'){
  const s=fullView.snapshot;stages.add(s.phase);
  if(s.actionTeam!==null){
   const actor=s.actionTeam;await assert.rejects(fullCoaches[1-actor].call(fullRounds,{type:'kickoff',power:1}),/other coach/);
-  const action=s.phase==='coinToss'?{type:'toss',choice:'heads'}:s.phase==='receive'?{type:'receive',choice:'kick'}:s.phase==='conversion'?{type:'conversion',choice:fullRounds%2?'pat':'two'}:s.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.9};
+  const action=s.phase==='coinToss'?{type:'toss',choice:'heads'}:s.phase==='receive'?{type:'receive',choice:'kick'}:s.phase==='conversion'?{type:'conversion',choice:fullRounds%2?'pat':'two'}:s.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.5};
   if(s.phase==='kickoff')await assert.rejects(fullCoaches[actor].call(fullRounds,{type:'kickoff',power:10}),/power/);
   await fullCoaches[actor].call(fullRounds,action);
  }else{
   const offense=s.team,oh=(await fullCoaches[offense].poll()).hand,dh=(await fullCoaches[1-offense].poll()).hand;
-  const call=oh.includes('deep')?'deep':oh.includes('inside')?'inside':oh[0],defense=dh.find(k=>Sim.defenseCalls[k].counters!==call)||dh[0];
-  await Promise.all([fullCoaches[offense].call(fullRounds,call),fullCoaches[1-offense].call(fullRounds,defense)]);
+  const call=oh.includes('deep')?'deep':oh.find(k=>Sim.calls[k].kind==='pass')||oh[0],defense=dh.find(k=>Sim.defenseCalls[k].counters!==call)||dh[0];
+  const current=rebuild(await fullRoom.state.storage.get('room')).match,line=current.lineup(offense),eligible=line.filter(p=>['WR','TE'].includes(p.pos)),target=Sim.calls[call].kind==='pass'?eligible[1].id:null;
+  if(target!==null){const resting=current.receiverPools[offense].find(p=>!eligible.some(a=>a.id===p.id));await assert.rejects(fullCoaches[offense].call(fullRounds,call,resting.id),/WR or TE/);sawReserveTarget||=eligible[1].receiverDepth>=4;}
+  await fullCoaches[offense].call(fullRounds,call,target);const hidden=await fullCoaches[1-offense].poll();assert.equal(JSON.stringify(hidden).includes('\"target\":'),false,'Rotating target stays private until both calls lock');
+  await fullCoaches[1-offense].call(fullRounds,defense);
  }
  fullRounds++;assert.ok(fullRounds<200);fullView=await full.poll();const theirs=await otherFull.poll();assert.deepEqual(theirs.snapshot,fullView.snapshot);assert.equal(fullView.round,fullRounds);
- const rotated=PvP.rotate(theirs);assert.deepEqual(rotated.snapshot.score,[...fullView.snapshot.score].reverse());if(fullView.snapshot.actionTeam!==null)assert.equal(rotated.snapshot.actionTeam,fullView.snapshot.actionTeam^1);
+ const rotated=PvP.rotate(theirs);assert.deepEqual(rotated.snapshot.offensiveSnaps,[...fullView.snapshot.offensiveSnaps].reverse());
+ const resolved=fullView.events[0].event,flippedEvent=rotated.events[0].event;if(resolved.scoringTeam!=null){sawReturnScore=true;assert.equal(flippedEvent.scoringTeam,resolved.scoringTeam^1);assert.equal(flippedEvent.receivingTeam,resolved.receivingTeam^1);assert.deepEqual(flippedEvent.returnUnitIds,resolved.returnUnitIds);assert.equal(fullView.snapshot.team,resolved.scoringTeam);assert.equal(fullView.snapshot.phase,'conversion');}
+ assert.deepEqual(rotated.snapshot.score,[...fullView.snapshot.score].reverse());if(fullView.snapshot.actionTeam!==null)assert.equal(rotated.snapshot.actionTeam,fullView.snapshot.actionTeam^1);
  fullCoaches.forEach(c=>c.consume(fullRounds));
 }
-assert.ok(stages.has('kickoff')&&stages.has('conversion'));const fullStored=await fullRoom.state.storage.get('room');assert.deepEqual(rebuild(fullStored).match.score,fullView.snapshot.score);assert.deepEqual(rebuild(fullStored).match.stats,fullView.snapshot.stats);
-console.log(`PASS: ${fullRounds} version-3 PvP actions including toss, receive choice, kickoff meters, conversions, actor enforcement, both perspective rotations and durable replay.`);
+assert.ok(stages.has('kickoff')&&stages.has('conversion'));assert.ok(sawReserveTarget,'Reserve WRs receive real targeted calls');assert.ok(sawReturnScore,'Return TDs rotate scoring ownership for the visiting coach');const fullStored=await fullRoom.state.storage.get('room');assert.deepEqual(rebuild(fullStored).match.score,fullView.snapshot.score);assert.deepEqual(rebuild(fullStored).match.stats,fullView.snapshot.stats);
+console.log(`PASS: ${fullRounds} version-4 PvP actions including toss, receive choice, kickoff meters, conversions, actor enforcement, both perspective rotations and durable replay.`);
 
 console.log(`PASS: two real coach clients, ${rounds} authoritative PvP downs through final whistle, private calls/tokens/seeds, idempotency, concurrency, third-player rejection, durability, refresh recovery, mirrored perspectives, expiry and full stat agreement.`);

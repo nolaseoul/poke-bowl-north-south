@@ -6,9 +6,9 @@ const fail=(text,status=400)=>{throw Object.assign(Error(text),{status})};
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 const ttl=12*60*60*1000;
 function coach(data){if(!draft.valid(data.lineup)||data.lineup.some(id=>!Number.isInteger(id)))fail('Choose 22 different Pokémon.');return{name:naming.name(data.name),lineup:data.lineup,token:crypto.randomUUID()+crypto.randomUUID()}}
-export function snapshot(m){return structuredClone({names:m.names,score:m.score,team:m.team,ball:m.ball,first:m.first,down:m.down,quarter:m.quarter,clock:m.clock,over:m.over,plays:m.plays,series:m.series,stats:m.stats,usedUltimates:m.usedUltimates.map(s=>[...s]),activeUltimates:m.activeUltimates.map(s=>[...s]),actionTeam:m.actor(),footballFlow:m.footballFlow,phase:m.phase,toss:m.toss,openingReceiver:m.openingReceiver,pendingBoundary:m.pendingBoundary})}
+export function snapshot(m){return structuredClone({names:m.names,score:m.score,team:m.team,ball:m.ball,first:m.first,down:m.down,quarter:m.quarter,clock:m.clock,over:m.over,plays:m.plays,series:m.series,stats:m.stats,usedUltimates:m.usedUltimates.map(s=>[...s]),activeUltimates:m.activeUltimates.map(s=>[...s]),actionTeam:m.actor(),stadiumRules:m.stadiumRules,offensiveSnaps:m.offensiveSnaps,footballFlow:m.footballFlow,phase:m.phase,toss:m.toss,openingReceiver:m.openingReceiver,pendingBoundary:m.pendingBoundary})}
 export function rebuild(room,after=0){
- const teams=room.coaches.map(c=>new draft.Draft(c.lineup).roster()),m=new sim.Match(league.random(room.seed),{teams,names:room.coaches.map(c=>c.name),footballFlow:room.rulesVersion===3}),events=[];
+ const teams=room.coaches.map(c=>new draft.Draft(c.lineup).roster()),m=new sim.Match(league.random(room.seed),{teams,names:room.coaches.map(c=>c.name),footballFlow:room.rulesVersion>=3,stadiumRules:room.rulesVersion>=4}),events=[];
  room.calls.forEach((calls,i)=>{const event=Object.hasOwn(calls,'action')?m.next(calls.action):m.next(calls.offense,calls.defense,calls.target??null);if(i>=after)events.push({round:i+1,event,snapshot:snapshot(m)})});return{match:m,events};
 }
 // One serialized, durable room owns both coaches' hidden calls and the authoritative result.
@@ -19,7 +19,7 @@ export class PvPRoom{
   try{
    const url=new URL(request.url),method=request.method,token=request.headers.get('X-Room-Token');let room=await this.state.storage.get('room');
    if(url.pathname==='/create'&&method==='POST'){
-    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,handVersion:2,rulesVersion:data.rulesVersion===3?3:1,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
+    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,handVersion:2,rulesVersion:[3,4].includes(data.rulesVersion)?data.rulesVersion:1,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
    }
    if(!room)fail('Invitation not found or expired.',404);if(Date.now()>room.expires)fail('This invitation expired. Create a new one.',410);
    let seat=room.coaches.findIndex(c=>c&&c.token===token);
@@ -43,7 +43,7 @@ export class PvPRoom{
     }else{
     if(typeof data.call!=='string'||!Object.hasOwn(choices,data.call))fail('Choose a valid play.');
     const target=data.target??null;
-    if(target!==null){if(!offense)fail('Only the offense can choose a receiver.');try{sim.firstRead(data.call,match.teams[seat],target)}catch(error){fail(error.message)}}
+    if(target!==null){if(!offense)fail('Only the offense can choose a receiver.');try{sim.firstRead(data.call,match.lineup(seat),target)}catch(error){fail(error.message)}}
     const prior=room.pending[seat],priorCall=typeof prior==='string'?prior:prior?.call,priorTarget=typeof prior==='string'?null:prior?.target??null;
     if(prior&&(priorCall!==data.call||priorTarget!==target))fail('Your call is already locked for this down.',409);
     if(room.handVersion===2&&!league.hand(room.seed,room.calls.length,!offense).includes(data.call))fail('Choose one of your five offered plays.');

@@ -35,6 +35,10 @@ jobs:
         run: node tests/playbook.cjs
       - name: Validate receiver choices and ranked target histories
         run: node tests/receiver-target.cjs
+      - name: Validate legacy football flow and conversions
+        run: node tests/football.cjs
+      - name: Validate receiver rotations and chaotic special teams
+        run: node tests/stadium-upgrade.cjs
       - name: Validate stadium artwork and crowd behavior
         run: node tests/stadium.cjs
       - name: Validate stereo soundtrack, PCM instruments and controls

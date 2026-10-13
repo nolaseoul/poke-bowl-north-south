@@ -48,8 +48,8 @@ for(let seed=1;seed<=12;seed++){
      let chosen=null;
      if(vm.runInContext("match.team===0&&PokeSim.calls[selectedPlay].kind==='pass'&&match.down!==4",sandbox)){
       assert.equal(vm.runInContext('selectedTarget',sandbox),null,'A fresh down restores the concept’s first read');
-      vm.runInContext("selectedTarget=squads[0].filter(p=>p.pos==='WR')[1].id;formation();coachUI()",sandbox);
-      chosen=vm.runInContext('selectedTarget',sandbox);assert.equal(vm.runInContext('previewEvent.target',sandbox),chosen);assert.equal(element('receiverPicker').hidden,false);assert.match(element('receiverChoices').innerHTML,new RegExp('data-target="'+chosen+'" aria-pressed="true"'));assert.equal(element('readName').textContent,draft.roster().find(p=>p.id===chosen).name);
+      vm.runInContext("selectedTarget=fieldTeam(0).filter(p=>p.pos==='WR')[1].id;formation();coachUI()",sandbox);
+      chosen=vm.runInContext('selectedTarget',sandbox);assert.equal(vm.runInContext('previewEvent.target',sandbox),chosen);assert.equal(element('receiverPicker').hidden,false);assert.match(element('receiverChoices').innerHTML,new RegExp('data-target="'+chosen+'" aria-pressed="true"'));assert.equal(element('readName').textContent,vm.runInContext('teamRoster(0).find(p=>p.id===selectedTarget).name',sandbox));
      }
      element('callPlay').onclick();
      if(chosen!==null){assert.equal(vm.runInContext('rankedCalls.at(-1).target',sandbox),chosen);if(vm.runInContext("event.type==='pass'",sandbox))assert.equal(vm.runInContext('event.target',sandbox),chosen);assert.equal(element('receiverPicker').hidden,true,'Receiver changes close when the play starts')}

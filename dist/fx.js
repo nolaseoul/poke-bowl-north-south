@@ -31,7 +31,7 @@ function effect(kind,rate=RATE){
 }
 function cuesBetween(m,e,from,to,replay=false){
  const cues=[];const add=(at,kind)=>{if(from<at&&to>=at)cues.push({at,kind})};
- if(e.type==='kickoff'){add(m.release,'kick');if(!e.touchback){add(m.catchAt,'catch');add(m.contact,'hit')}add(m.resolveAt,'whistle');return cues.sort((a,b)=>a.at-b.at)}
+ if(e.returner){add(m.release,'kick');if(!e.touchback){add(m.catchAt,'catch');add(m.contact,e.touchdown?'cheer':'hit');for(const cue of m.powerCues||[]){add(cue.at,'charge');add(cue.at+.28,'ultimate')}}if(!e.touchdown)add(m.resolveAt,'whistle');return cues.sort((a,b)=>a.at-b.at)}
  if(!replay){add(-.8,'ready');add(-.46,'set');add(-.12,'hut');add(m.snap-.32,'hike')}
  add(m.snap,'snap');if(m.powerCues){for(const cue of m.powerCues){add(cue.at,'charge');add(cue.at+.28,'ultimate')}}else if(e.ultimates?.length)add((m.ultimateAt??m.snap)+.04,'ultimate');
  if(m.kick)add(1.1,'kick');else if(!m.run&&!m.sack)add(m.release,'throw');

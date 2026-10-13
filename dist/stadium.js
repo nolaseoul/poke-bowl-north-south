@@ -4,6 +4,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dances=typeof module!=='undefined'?require('./dances.js'):root.PokeDances;
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
 // Keep the line, both units and the scoring end zone in view, in either direction.
+function goalpostSize(extraPoint=false){return extraPoint?{halfWidth:78,stem:48,crossbar:88,height:210,line:7}:{halfWidth:27,stem:30,crossbar:28,height:61,line:4}}
 function cameraFor(yard){return clamp(yard+(yard>=78?8:4),12,98)}
 class Stadium{
  constructor(canvas,images){
@@ -40,7 +41,8 @@ class Stadium{
  }
  powerStrike(actor,s,P){
   const ctx=this.ctx,u=actor.power,age=actor.powerAge,players=s.frame.players,a=P(actor.tx,actor.ty),e=s.event;let target;
-  if(e.counter)target=players.find(p=>p.team===e.team&&p.p.id===e.qb);
+  if(e.returner)target=actor.team===e.receivingTeam?players.filter(p=>p.team!==actor.team).sort((p,q)=>Math.hypot(p.tx-actor.tx,(p.ty-actor.ty)*16)-Math.hypot(q.tx-actor.tx,(q.ty-actor.ty)*16))[0]:players.find(p=>p.carrier);
+  else if(e.counter)target=players.find(p=>p.team===e.team&&p.p.id===e.qb);
   else if(actor.p.pos==='QB')target=players.find(p=>p.team===actor.team&&p.p.id===e.target);
   else if(actor.team!==e.team)target=players.find(p=>p.carrier);
   else target=players.filter(p=>p.team!==actor.team).sort((p,q)=>Math.hypot(p.tx-actor.tx,(p.ty-actor.ty)*16)-Math.hypot(q.tx-actor.tx,(q.ty-actor.ty)*16))[0];
@@ -63,7 +65,7 @@ class Stadium{
   ctx.font='bold 11px monospace';ctx.textAlign='center';const text=age<.28?'CHARGING…':u.name.toUpperCase(),w=ctx.measureText(text).width+14;ctx.fillStyle='#101b2bf2';ctx.fillRect(a.x-w/2,a.y-81,w,18);ctx.strokeStyle=u.color;ctx.lineWidth=1;ctx.strokeRect(a.x-w/2,a.y-81,w,18);ctx.fillStyle=u.color;ctx.fillText(text,a.x,a.y-68);ctx.restore();
  }
  atmosphere(s){
-  const ctx=this.ctx,t=s.fullEffects?(s.ambientTime??s.elapsed):0,cheering=Boolean((s.event?.touchdown||s.event?.score>0||s.event?.safety)&&s.phase>s.motion.contact),energy=cheering?1:.24;
+  const ctx=this.ctx,t=s.fullEffects?(s.ambientTime??s.elapsed):0,cheering=Boolean((s.event?.touchdown||s.event?.score>0||s.event?.safety||s.event?.gain>=20||s.event?.returnYards>=25||s.event?.interception)&&s.phase>=s.motion.contact),energy=cheering?1.9:.24;
   ctx.fillStyle='#1e3149';ctx.fillRect(0,0,1120,273);
   if(this.backdrop?.complete&&this.backdrop.naturalWidth){ctx.imageSmoothingEnabled=false;ctx.drawImage(this.backdrop,0,0,1120,260);}
   else{ctx.fillStyle='#334455';ctx.fillRect(0,48,1120,210);for(let row=0;row<8;row++)for(let col=0;col<112;col++){const x=col*10,y=80+row*21;ctx.fillStyle=['#f2c39b','#b88264','#e2aa78'][(row+col)%3];ctx.fillRect(x+2,y,4,5);ctx.fillStyle=col<56?'#428cce':'#df655b';ctx.fillRect(x,y+5,8,9);}}
@@ -73,6 +75,13 @@ class Stadium{
    const skin=['#f3be89','#d29168','#986346','#f0cfab'][i%4],shirt=team===0?['#287fd1','#55bddc','#174476'][i%3]:['#d34f58','#ed8a6d','#8e374a'][i%3];
    ctx.fillStyle='#17293b';ctx.fillRect(x-1,y-5,6,6);ctx.fillStyle=skin;ctx.fillRect(x,y-4,4,4);ctx.fillStyle=i%3?'#443b35':'#e1bb63';ctx.fillRect(x-1,y-5,6,2);ctx.fillStyle=shirt;ctx.fillRect(x-1,y,6,6);
    const raised=cheering||Math.sin(t*2+i*.66)>.65,arm=raised?y-5:y+1;ctx.fillStyle=shirt;ctx.fillRect(x-3,arm,2,5);ctx.fillRect(x+5,arm,2,5);ctx.fillStyle=skin;ctx.fillRect(x-3,arm-1,2,2);ctx.fillRect(x+5,arm-1,2,2);
+  }
+  if(cheering){
+   const age=Math.max(0,s.phase-s.motion.contact),score=s.event?.touchdown||s.event?.score>0,color=(s.event.scoringTeam??s.event.team)===0?'#75dbff':'#ff9b8c';
+   ctx.save();ctx.textAlign='center';ctx.font='bold 19px Manrope';
+   for(let i=0;i<6;i++){const x=90+i*188,y=104+(i%2)*41-(s.fullEffects?Math.sin(t*4+i)*5:0);ctx.fillStyle='#10223be6';ctx.fillRect(x-48,y-21,96,29);ctx.strokeStyle=color;ctx.strokeRect(x-48,y-21,96,29);ctx.fillStyle=color;ctx.fillText(score?'GOOO!':'ROAR!',x,y)}
+   if(s.fullEffects)for(let i=0;i<42;i++){const x=(i*83+age*(i%2?24:-24)+1120)%1120,y=75+(i*31+age*36)%152;ctx.fillStyle=i%3===0?'#ffdf66':color;ctx.save();ctx.translate(x,y);ctx.rotate(age*2+i);ctx.fillRect(-3,-2,6,3);ctx.restore()}
+   ctx.restore();
   }
   // Cloth strips ripple with the stadium breeze, even while awaiting a play call.
   [69,219,365,757,900,1050].forEach((x,i)=>{const y=209+(i%2)*13;ctx.fillStyle='#d6d8c8';ctx.fillRect(x,y-33,2,44);for(let strip=0;strip<8;strip++){const lift=Math.sin(t*4+i+strip*.55)*3;ctx.fillStyle=strip%3===1?'#e9e9cb':i<3?'#4597df':'#ee7169';ctx.fillRect(x+2+strip*4,y-32+lift,4,17);}});
@@ -105,7 +114,7 @@ class Stadium{
   line(P(54,start),P(586,start),'#72d3e9',3);line(P(54,first),P(586,first),'#ebd576',3);
   const marker=P(586,first);ctx.fillStyle='#e9d375';ctx.fillRect(marker.x-8,marker.y+5,17,21);ctx.fillStyle='#283b21';ctx.font='bold 13px monospace';ctx.fillText('1',marker.x,marker.y+20);
   // Goalposts are visible near either end zone.
-  [-7,107].forEach(yard=>{const p=P(320,yard);ctx.strokeStyle='#e7ce72';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(p.x,p.y+30);ctx.lineTo(p.x,p.y-28);ctx.moveTo(p.x-27,p.y-28);ctx.lineTo(p.x+27,p.y-28);ctx.moveTo(p.x-27,p.y-28);ctx.lineTo(p.x-27,p.y-61);ctx.moveTo(p.x+27,p.y-28);ctx.lineTo(p.x+27,p.y-61);ctx.stroke()});
+  [-7,107].forEach(yard=>{const p=P(320,yard),g=goalpostSize(yard===107&&(event?.extraPoint||s.footballMode==='pat'));ctx.strokeStyle='#ffe37b';ctx.lineWidth=g.line;ctx.beginPath();ctx.moveTo(p.x,p.y+g.stem);ctx.lineTo(p.x,p.y-g.crossbar);ctx.moveTo(p.x-g.halfWidth,p.y-g.crossbar);ctx.lineTo(p.x+g.halfWidth,p.y-g.crossbar);ctx.moveTo(p.x-g.halfWidth,p.y-g.crossbar);ctx.lineTo(p.x-g.halfWidth,p.y-g.height);ctx.moveTo(p.x+g.halfWidth,p.y-g.crossbar);ctx.lineTo(p.x+g.halfWidth,p.y-g.height);ctx.stroke()});
   if(waiting){const routes=team===1?root.PokeMotion.defenseRoutes(selectedDefense||'gap',start,squads[0]):root.PokeMotion.routes(selectedPlay,start,squads[0],event?.target);routes.forEach(route=>{ctx.setLineDash(route.primary?[]:[6,6]);ctx.strokeStyle=route.primary?'#f5dd7b':'#e0edc29c';ctx.lineWidth=route.primary?3:2;ctx.beginPath();route.points.forEach((p,i)=>{const q=P(p.x,p.y);if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y)});ctx.stroke();ctx.setLineDash([]);const end=route.points.at(-1),prev=route.points.at(-2),a=P(end.x,end.y),b=P(prev.x,prev.y),angle=Math.atan2(a.y-b.y,a.x-b.x);ctx.fillStyle=route.primary?'#f5dd7b':'#e0edc2';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x-11*Math.cos(angle-.5),a.y-11*Math.sin(angle-.5));ctx.lineTo(a.x-11*Math.cos(angle+.5),a.y-11*Math.sin(angle+.5));ctx.closePath();ctx.fill()})}
   for(const particle of particles){const p=P(particle.x,particle.y);ctx.globalAlpha=clamp(particle.life/particle.max,0,1);ctx.fillStyle=particle.color;ctx.save();ctx.translate(p.x,p.y);if(particle.kind==='confetti')ctx.rotate(particle.life*7+particle.x);ctx.fillRect(-particle.size/2,-particle.size/2,particle.size,particle.kind==='confetti'?particle.size/2:particle.size);ctx.restore()}ctx.globalAlpha=1;
   frame.players.slice().sort((a,b)=>a.tx-b.tx).forEach(player=>{
@@ -126,5 +135,5 @@ class Stadium{
   ctx.restore();if(replaying){ctx.fillStyle='#14291de8';ctx.fillRect(455,243,210,23);ctx.fillStyle='#e5f894';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('↺ HIGHLIGHT REPLAY',560,259)}if(paused){ctx.fillStyle='#0e211baa';ctx.fillRect(0,0,1120,640);ctx.fillStyle='#d8f474';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.fillText('BROADCAST PAUSED',560,330)}
  }
 }
-root.PokeStadium={Stadium,project,cameraFor};if(typeof module!=='undefined')module.exports=root.PokeStadium;
+root.PokeStadium={Stadium,project,cameraFor,goalpostSize};if(typeof module!=='undefined')module.exports=root.PokeStadium;
 })(typeof window!=='undefined'?window:globalThis);
