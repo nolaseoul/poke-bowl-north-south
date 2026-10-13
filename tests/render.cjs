@@ -44,7 +44,16 @@ for(let seed=1;seed<=12;seed++){
   let frames=0,wasReplay=false,wasCelebrating=false,hold=0,wasCounter=false,counterFrames=0;
   while(vm.runInContext('running',sandbox)&&frames<12000){
     if(seed%2===1&&vm.runInContext('waiting&&!!footballMode&&match.actor()===0',sandbox)){vm.runInContext(`submitFootball(match.phase==='coinToss'?{type:'toss',choice:'heads'}:match.phase==='receive'?{type:'receive',choice:'receive'}:match.phase==='conversion'?{type:'conversion',choice:match.plays%2?'pat':'two'}:match.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.9})`,sandbox)}
-    if(seed%2===1&&vm.runInContext('waiting&&!footballMode',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall;selectedDefense=Object.keys(PokeSim.defenseCalls)[match.plays%5]',sandbox);if(vm.runInContext('match.team===1',sandbox)){defenseWaits++;assert.match(element('playbookTitle').textContent,/DEFENSIVE/);const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.06)',sandbox);assert.equal(vm.runInContext('match.plays',sandbox),plays);if(!vm.runInContext('match.down===4&&match.ball<92',sandbox))assert.match(element('coachAdvice').textContent,/counters/)}element('callPlay').onclick();}
+    if(seed%2===1&&vm.runInContext('waiting&&!footballMode',sandbox)){sandbox.nextCall=Object.keys(PokeSim.calls)[frames%5];vm.runInContext('selectedPlay=nextCall;selectedDefense=Object.keys(PokeSim.defenseCalls)[match.plays%5]',sandbox);if(vm.runInContext('match.team===1',sandbox)){defenseWaits++;assert.match(element('playbookTitle').textContent,/DEFENSIVE/);const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.06)',sandbox);assert.equal(vm.runInContext('match.plays',sandbox),plays);if(!vm.runInContext('match.down===4&&match.ball<92',sandbox))assert.match(element('coachAdvice').textContent,/counters/)}
+     let chosen=null;
+     if(vm.runInContext("match.team===0&&PokeSim.calls[selectedPlay].kind==='pass'&&match.down!==4",sandbox)){
+      assert.equal(vm.runInContext('selectedTarget',sandbox),null,'A fresh down restores the concept’s first read');
+      vm.runInContext("selectedTarget=squads[0].filter(p=>p.pos==='WR')[1].id;formation();coachUI()",sandbox);
+      chosen=vm.runInContext('selectedTarget',sandbox);assert.equal(vm.runInContext('previewEvent.target',sandbox),chosen);assert.equal(element('receiverPicker').hidden,false);assert.match(element('receiverChoices').innerHTML,new RegExp('data-target="'+chosen+'" aria-pressed="true"'));assert.equal(element('readName').textContent,draft.roster().find(p=>p.id===chosen).name);
+     }
+     element('callPlay').onclick();
+     if(chosen!==null){assert.equal(vm.runInContext('rankedCalls.at(-1).target',sandbox),chosen);if(vm.runInContext("event.type==='pass'",sandbox))assert.equal(vm.runInContext('event.target',sandbox),chosen);assert.equal(element('receiverPicker').hidden,true,'Receiver changes close when the play starts')}
+    }
     const beforePower=vm.runInContext('(motion.powerCues||[]).some(u=>phase>=u.at&&phase<u.end)&&!celebration&&!counterHold&&!waiting&&!paused',sandbox),beforePhase=vm.runInContext('phase',sandbox);
     const callback=nextFrame;nextFrame=null;
     callback(++frames*60);

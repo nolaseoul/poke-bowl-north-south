@@ -9,7 +9,7 @@ function coach(data){if(!draft.valid(data.lineup)||data.lineup.some(id=>!Number.
 export function snapshot(m){return structuredClone({names:m.names,score:m.score,team:m.team,ball:m.ball,first:m.first,down:m.down,quarter:m.quarter,clock:m.clock,over:m.over,plays:m.plays,series:m.series,stats:m.stats,usedUltimates:m.usedUltimates.map(s=>[...s]),activeUltimates:m.activeUltimates.map(s=>[...s]),actionTeam:m.actor(),footballFlow:m.footballFlow,phase:m.phase,toss:m.toss,openingReceiver:m.openingReceiver,pendingBoundary:m.pendingBoundary})}
 export function rebuild(room,after=0){
  const teams=room.coaches.map(c=>new draft.Draft(c.lineup).roster()),m=new sim.Match(league.random(room.seed),{teams,names:room.coaches.map(c=>c.name),footballFlow:room.rulesVersion===3}),events=[];
- room.calls.forEach((calls,i)=>{const event=Object.hasOwn(calls,'action')?m.next(calls.action):m.next(calls.offense,calls.defense);if(i>=after)events.push({round:i+1,event,snapshot:snapshot(m)})});return{match:m,events};
+ room.calls.forEach((calls,i)=>{const event=Object.hasOwn(calls,'action')?m.next(calls.action):m.next(calls.offense,calls.defense,calls.target??null);if(i>=after)events.push({round:i+1,event,snapshot:snapshot(m)})});return{match:m,events};
 }
 // One serialized, durable room owns both coaches' hidden calls and the authoritative result.
 export class PvPRoom{
@@ -35,17 +35,21 @@ export class PvPRoom{
     if(data.round!==room.calls.length)fail('The down changed. Refresh your call.',409);
     const actionTurn=match.footballFlow?match.actor():null,offense=seat===match.team,choices=offense?sim.calls:sim.defenseCalls;
     if(actionTurn!==null){
+     if(data.target!=null)fail('Receiver targets are only available on pass plays.');
      if(seat!==actionTurn)fail('Wait for the other coach’s football action.',409);
      try{match.next(data.call)}catch(error){fail(error.message)}
      room.calls.push({action:data.call});room.pending=[null,null];room.revision++;
      ({match,events}=rebuild(room,Math.max(0,Number(url.searchParams.get('after'))||0)));
     }else{
     if(typeof data.call!=='string'||!Object.hasOwn(choices,data.call))fail('Choose a valid play.');
-    if(room.pending[seat]&&room.pending[seat]!==data.call)fail('Your call is already locked for this down.',409);
+    const target=data.target??null;
+    if(target!==null){if(!offense)fail('Only the offense can choose a receiver.');try{sim.firstRead(data.call,match.teams[seat],target)}catch(error){fail(error.message)}}
+    const prior=room.pending[seat],priorCall=typeof prior==='string'?prior:prior?.call,priorTarget=typeof prior==='string'?null:prior?.target??null;
+    if(prior&&(priorCall!==data.call||priorTarget!==target))fail('Your call is already locked for this down.',409);
     if(room.handVersion===2&&!league.hand(room.seed,room.calls.length,!offense).includes(data.call))fail('Choose one of your five offered plays.');
-    room.pending[seat]=data.call;room.revision++;
+    room.pending[seat]=target===null?data.call:{call:data.call,target};room.revision++;
     if(room.pending.every(Boolean)){
-     room.calls.push({offense:room.pending[match.team],defense:room.pending[1-match.team]});room.pending=[null,null];
+     const attack=room.pending[match.team];room.calls.push({offense:typeof attack==='string'?attack:attack.call,defense:room.pending[1-match.team],...(typeof attack==='object'?{target:attack.target}:{})});room.pending=[null,null];
      ({match,events}=rebuild(room,Math.max(0,Number(url.searchParams.get('after'))||0)));
     }
     }

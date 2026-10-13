@@ -23,10 +23,14 @@ while(view.state!=='finished'){
  assert.deepEqual((await coaches[offense].poll()).hand,offered,'Polling must not reroll the hand');
  const counter=defOffered.find(k=>offered.includes(Sim.defenseCalls[k].counters)),call=counter?Sim.defenseCalls[counter].counters:offered[0],defense=counter||defOffered[0];
  const unavailable=Object.keys(Sim.calls).find(k=>!offered.includes(k));await assert.rejects(coaches[offense].call(rounds,unavailable),/offered/);
- const locked=await coaches[offense].call(rounds,call);assert.equal(locked.round,rounds);assert.equal(locked.locked[offense],true);assert.equal(locked.pending,undefined);assert.equal(locked.calls,undefined);assert.equal(locked.seed,undefined);assert.equal(locked.coaches,undefined);
- const other=await coaches[1-offense].poll();assert.equal(other.locked[offense],true);assert.equal(JSON.stringify(other).includes('"offense":"'+call+'"'),false,'Unresolved calls must stay hidden');
- await coaches[offense].call(rounds,call);await assert.rejects(coaches[offense].call(rounds,offered.find(k=>k!==call)),/already locked/);
- await coaches[1-offense].call(rounds,defense);view=await host.poll();const theirs=await visitor.poll();assert.deepEqual(view.snapshot,theirs.snapshot);assert.equal(view.round,rounds+1);assert.equal(view.events.length,1);assert.equal(view.events[0].round,rounds+1);sawCounter||=view.events[0].event.counter;
+ const target=Sim.calls[call].kind==='pass'?new Draft.Draft(offense?opponent:ids).roster().filter(p=>p.pos==='WR')[1].id:null;
+ if(target!==null){await assert.rejects(coaches[offense].call(rounds,call,999),/WR or TE/);await assert.rejects(coaches[1-offense].call(rounds,defense,target),/Only the offense/)}
+ const locked=await coaches[offense].call(rounds,call,target);assert.equal(locked.round,rounds);assert.equal(locked.locked[offense],true);assert.equal(locked.pending,undefined);assert.equal(locked.calls,undefined);assert.equal(locked.seed,undefined);assert.equal(locked.coaches,undefined);
+ const other=await coaches[1-offense].poll();assert.equal(other.locked[offense],true);assert.equal(JSON.stringify(other).includes('"offense":"'+call+'"'),false,'Unresolved calls must stay hidden');assert.equal(JSON.stringify(other).includes('\"target\":'),false,'Selected receiver stays hidden before the snap');
+ await coaches[offense].call(rounds,call,target);
+ if(target!==null){const alternative=new Draft.Draft(offense?opponent:ids).roster().find(p=>p.pos==='WR').id;await assert.rejects(coaches[offense].call(rounds,call,alternative),/already locked/);assert.equal((await room.state.storage.get('room')).pending[offense].target,target)}
+ await assert.rejects(coaches[offense].call(rounds,offered.find(k=>k!==call)),/already locked/);
+ await coaches[1-offense].call(rounds,defense);view=await host.poll();const theirs=await visitor.poll();assert.deepEqual(view.snapshot,theirs.snapshot);assert.equal(view.round,rounds+1);assert.equal(view.events.length,1);assert.equal(view.events[0].round,rounds+1);sawCounter||=view.events[0].event.counter;if(target!==null&&view.events[0].event.type==='pass')assert.equal(view.events[0].event.target,target);
  const flipped=PvP.rotate(theirs);assert.deepEqual(flipped.snapshot.score,[view.snapshot.score[1],view.snapshot.score[0]]);assert.equal(flipped.snapshot.team,view.snapshot.team^1);assert.equal(flipped.events[0].event.team,view.events[0].event.team^1);assert.deepEqual(flipped.events[0].event.ultimates.map(u=>u.team),view.events[0].event.ultimates.map(u=>u.team^1));
  for(const c of coaches)c.consume(++c.cursor);rounds++;
  await assert.rejects(coaches[0].call(rounds-1,'quick'),/down changed|finished/);

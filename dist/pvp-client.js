@@ -12,7 +12,7 @@ class RoomClient{
  async join(lineup,name){const result=await this.request('join',{lineup,name});this.remember(result.token);return this.poll()}
  deliver(view){if(view.revision!=null&&view.revision<this.revision)return;this.revision=view.revision??this.revision;this.view=view;this.onView?.(view)}
  async poll(){const view=await this.request();this.deliver(view);return view}
- async call(round,call){const view=await this.request('call',{round,call});this.deliver(view);return view}
+ async call(round,call,target=null){const view=await this.request('call',{round,call,...(target!==null?{target}:{})});this.deliver(view);return view}
  consume(round){this.cursor=Math.max(this.cursor,round)}
  start(onView,onError){this.stop();this.onView=onView;this.onError=onError;this.active=true;const tick=async()=>{try{await this.poll()}catch(error){if(this.active)this.onError?.(error)}finally{if(this.active)this.timer=setTimeout(tick,root.document?.hidden?3000:1000)}};tick()}
  stop(){this.active=false;clearTimeout(this.timer);this.onView=null}

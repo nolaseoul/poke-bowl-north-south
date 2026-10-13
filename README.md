@@ -59,6 +59,7 @@ node tests/draft.cjs
 node tests/teams.cjs
 node tests/render.cjs
 node tests/playbook.cjs
+node tests/receiver-target.cjs
 node tests/stadium.cjs
 node tests/dances.cjs
 node tests/fx.cjs
@@ -114,3 +115,5 @@ New friend rooms persist deterministic hands across refresh and polling, and
 reject calls outside that coach's five choices. Existing friend rooms retain
 their previous unrestricted calls. Country search is available for guest entry,
 profiles and standings; United States appears first.
+
+On a pass play, use **PASS TARGET** to choose either WR or the TE before **CALL PLAY**. The gold route and coach portrait follow the chosen receiver. Selection resets to the concept’s first read each down. Auto uses the default read. Target choices affect the actual pass and receiver stats, are verified in ranked replays, and stay private in friend duels until both calls lock.

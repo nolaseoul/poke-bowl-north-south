@@ -18,8 +18,13 @@
    if(m.over)throw Error('Invalid play history.');
    if(m.footballFlow&&m.actor()!==null){if(call!==null&&(typeof call!=='object'||Array.isArray(call)||Object.keys(call).length!==1||!Object.hasOwn(call,'action')||m.actor()!==0))throw Error('Invalid play history.');try{m.next(call?.action??null)}catch{throw Error('Invalid play history.')}continue}
    if(call!==null&&typeof call==='object'){
-    if(m.team!==1||Array.isArray(call)||Object.keys(call).length!==1||!Object.hasOwn(sim.defenseCalls,call.defense))throw Error('Invalid play history.');
-    m.next(null,call.defense);
+    if(Array.isArray(call))throw Error('Invalid play history.');
+    if(m.team===0&&Object.keys(call).length===2&&Object.hasOwn(call,'offense')&&Object.hasOwn(call,'target')){
+     try{sim.firstRead(call.offense,m.teams[0],call.target);if(call.target===null)throw Error();m.next(call.offense,null,call.target)}catch{throw Error('Invalid play history.')}
+    }else{
+     if(m.team!==1||Object.keys(call).length!==1||!Object.hasOwn(sim.defenseCalls,call.defense))throw Error('Invalid play history.');
+     m.next(null,call.defense);
+    }
    }else{
     if(call!==null&&(typeof call!=='string'||!Object.hasOwn(sim.calls,call)||m.team!==0))throw Error('Invalid play history.');
     m.next(call);

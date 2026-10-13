@@ -33,6 +33,8 @@ jobs:
         run: node tests/render.cjs
       - name: Validate play calls and horizontal projection
         run: node tests/playbook.cjs
+      - name: Validate receiver choices and ranked target histories
+        run: node tests/receiver-target.cjs
       - name: Validate stadium artwork and crowd behavior
         run: node tests/stadium.cjs
       - name: Validate stereo soundtrack, PCM instruments and controls

@@ -29,6 +29,11 @@ mode when the computer owns the action. Pause freezes meters and coin reveals;
 broadcast speed cannot accelerate the player's meter. Touch/click and Space
 can stop a kick meter. The pause button remains above the mobile meter panel.
 
+On a pass, **PASS TARGET** chooses either wide receiver or the tight end. The
+gold route, coach portrait, pass animation and receiver statistics follow that
+choice. Each new down restores the play’s default first read; Auto keeps that
+default. Two-point pass plays support the same selection.
+
 In PvP, the server verifies which coach owns a coin/receive/conversion/kick
 choice. These decisions resolve once, while scrimmage and two-point calls still
 require both hidden choices. Each action is durable and replayed from the room
