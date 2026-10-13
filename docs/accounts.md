@@ -14,15 +14,16 @@ The Worker configuration uses its public API URL and publishable key. Auth Site
 URL is `https://www.pokeball.gg/`; the exact redirect allowlist includes that URL,
 `https://pokeball.gg/` and the existing workers.dev game's root URL.
 
-Email/password is enabled with confirmation required. Custom SMTP and Google
-OAuth credentials are still pending. Public signup/email delivery, Google
-consent and a real signed-in ranked result have **not** been verified. The
-default email service is limited to project-team addresses; connecting the
-project alone does not make public signup production-ready. Google stays
-disabled in the game until provider setup and verification are complete.
+Email/password is enabled with confirmation required, and custom SMTP has been
+saved. Google OAuth is configured and enabled in the live game. A real Google
+sign-in was verified through account selection, consent, Supabase's callback
+and the game's authenticated profile screen; that session survived a browser
+refresh. The owner still needs to choose a public coach name and country.
+Positive email delivery/recovery and a real completed ranked save remain
+unverified. No OAuth client secret is stored in this repository.
 
 The dedicated project is connected. Keep this game’s users separate from the
-unrelated SchoolRoads and FreshCut projects. Remaining provider setup follows
+unrelated SchoolRoads and FreshCut projects. The provider verification checklist follows
 the checklist below; do not recreate the project.
 
 1. Enable email/password authentication, keep email confirmation enabled, and
@@ -180,3 +181,12 @@ The deployed configuration enables Google on both custom domains and workers.dev
 and the real game button reaches Google’s account chooser in Chrome. The owner’s
 account choice is pending; callback completion, session restoration and ranked
 saving still require end-to-end verification. No secret is in the repository.
+
+## Google sign-in and session restoration verified — October 12, 2026
+
+A real sign-in with the owner's selected Google account completed consent,
+returned through Supabase's callback, and opened the authenticated coach profile
+screen in the live game. After reloading, the same authenticated onboarding
+screen returned. This verifies both the saved client secret and persistent
+Google sessions. No public coach profile or ranked match was created: the owner
+can now choose their coach name and country and save the profile.
