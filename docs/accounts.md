@@ -170,3 +170,13 @@ until the owner adds a secret in Google Cloud and saves it in Supabase. Google
 Cloud no longer displays existing secrets; its client detail page offers Add secret.
 Do not commit or expose the new secret. Verify the authorization endpoint reaches
 Google before enabling the button again, then verify a complete user sign-in.
+
+## Google authorization repair verified — October 12, 2026
+
+After the owner saved the new secret in Supabase, the authorization endpoint
+returned HTTP 302 to accounts.google.com with the expected web client ID and
+Supabase callback URL. The former missing-secret validation error is resolved.
+The deployed configuration enables Google on both custom domains and workers.dev,
+and the real game button reaches Google’s account chooser in Chrome. The owner’s
+account choice is pending; callback completion, session restoration and ranked
+saving still require end-to-end verification. No secret is in the repository.
