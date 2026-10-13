@@ -117,3 +117,5 @@ their previous unrestricted calls. Country search is available for guest entry,
 profiles and standings; United States appears first.
 
 On a pass play, use **PASS TARGET** to choose either WR or the TE before **CALL PLAY**. The gold route and coach portrait follow the chosen receiver. Selection resets to the concept’s first read each down. Auto uses the default read. Target choices affect the actual pass and receiver stats, are verified in ranked replays, and stay private in friend duels until both calls lock.
+
+The entry screen puts **Play as Guest** first; country selection opens on demand. Account benefits explicitly cover saved W–L records, match history and the world leaderboard. The UI uses self-hosted Manrope and Syne fonts under the SIL Open Font License; license notices are in `dist/assets/fonts/`.

@@ -160,3 +160,13 @@ The browser test reached Supabase’s authorize endpoint but Chrome blocked that
 navigation with `ERR_BLOCKED_BY_CLIENT`. A complete Google consent, callback,
 session restoration and ranked-save test remains unverified. This checkpoint
 supersedes earlier notes that Google credentials or button activation are pending.
+
+## Google secret repair — October 12, 2026
+
+The live authorization request returned `Unsupported provider: missing OAuth secret`.
+The client ID is saved, but the Supabase Google secret field is empty. Provider
+`enabled` status alone does not verify credentials. The Google button is disabled
+until the owner adds a secret in Google Cloud and saves it in Supabase. Google
+Cloud no longer displays existing secrets; its client detail page offers Add secret.
+Do not commit or expose the new secret. Verify the authorization endpoint reaches
+Google before enabling the button again, then verify a complete user sign-in.

@@ -1,0 +1,38 @@
+/* A wide, bold display face and clear UI text, distinct from FreshCut's fonts. */
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.league-dialog{font-family:var(--font-ui);font-size:14px;line-height:1.5}
+.league-dialog h2{font-family:var(--font-display);font-weight:800;font-size:clamp(27px,5vw,34px);line-height:1.12;letter-spacing:-1.3px;margin:14px 0 10px}
+.league-dialog>.eyebrow{font:800 11px/1.4 var(--font-ui);letter-spacing:1.7px}
+.league-dialog p{font-size:14px;line-height:1.6;color:#b9cbe1}
+.league-dialog button{font-family:var(--font-ui);font-size:14px;font-weight:800;border-radius:10px;letter-spacing:0;min-height:48px}
+.league-dialog label{font:700 12px/1.5 var(--font-ui);letter-spacing:.3px;margin:16px 0 12px;color:#c7d9ed}
+.league-dialog input,.league-dialog select,.league-dialog .country-search{font:500 16px/1.4 var(--font-ui);min-height:48px;padding:12px 14px;border-radius:10px}
+.league-dialog .lime-button{background:#ffdc45;color:#152342;border:1px solid #ffdf67;padding:13px}
+.guest-section{margin:22px 0 26px;padding:16px;border:1px solid #478d9b;background:linear-gradient(130deg,#153648,#162c43);border-radius:14px}
+.guest-kicker{display:block;margin-bottom:10px;color:#84e4cb;font:800 10px/1.4 var(--font-ui);letter-spacing:1.5px}
+.guest-section #guestLogin,.guest-section .guest-continue{width:100%;display:flex;align-items:center;justify-content:center;gap:14px;min-height:54px;background:#ffdc45;border:1px solid #ffe983;color:#142440;font:800 15px/1.2 var(--font-ui);border-radius:10px;box-shadow:0 3px 0 #b38123}
+.guest-section #guestLogin:hover,.guest-section .guest-continue:hover{background:#ffe877}
+.guest-section p{font-size:12px;margin:13px 0 0;line-height:1.55;color:#bcd2e3}.guest-section p strong{color:#edf5ff;font-weight:800}
+#guestCountryPanel{margin-top:17px;padding-top:2px;border-top:1px solid #88bbd12e}#guestCountryPanel label{margin-top:12px}
+.guest-section .guest-continue{min-height:48px;margin-top:12px;background:#8be2cc;border-color:#b4f6e6;box-shadow:none;font-size:13px}
+.account-art{margin:0 0 10px;gap:12px}.account-art img{width:46px;height:46px;flex-shrink:0}.account-art .account-kicker{display:block;font:800 10px/1.5 var(--font-ui);letter-spacing:1.4px;color:#ffdb68}
+.account-art h3{margin:5px 0 0;font:800 20px/1.2 var(--font-display);letter-spacing:-.65px;color:#f1f5ff}.account-benefits{margin:0 0 20px!important}.account-benefits strong{color:#edf5ff;font-weight:800}
+.google-login{min-height:50px!important;border:1px solid #94adcf;border-radius:10px!important}.auth-divider{font:700 10px/1.4 var(--font-ui);letter-spacing:1px;margin:18px 0}
+.auth-tabs{gap:8px;margin:18px 0}.auth-tabs button{border:1px solid #405c81;background:#172c49;color:#afc6e4;border-radius:9px;padding:10px;font-size:12px}.auth-tabs button[aria-pressed=true]{border-color:#78b6ff;background:#284b7b;color:#ffe680}
+.account-foot{margin-top:8px;gap:18px}.league-dialog .account-foot button{font-size:12px;font-weight:700;background:none;border:0;min-height:38px;padding:5px 0;text-decoration:underline;text-underline-offset:4px;color:#9dd9ff}
+#accountMessage{font-size:13px}.league-dialog .leader-help{font-size:12px!important}.country-results{font-family:var(--font-ui);font-size:12px}
+.account-nav button{font-family:var(--font-ui);font-size:11px}.play-card strong{font-family:var(--font-ui);font-weight:800}.coach-read h3{font-size:21px;letter-spacing:-.6px}.welcome-menu>button{font-family:var(--font-ui);font-weight:800}.welcome-title{font-family:var(--font-display);font-weight:800}
+@media(max-width:680px){.league-dialog{padding:24px 18px!important}.league-dialog h2{font-size:28px;letter-spacing:-1px}.guest-section{padding:14px;margin:20px 0 24px}.account-art h3{font-size:18px}.league-dialog button{font-size:13px}.guest-section #guestLogin{font-size:15px}.league-dialog p{font-size:13px}.league-dialog input,.league-dialog select,.league-dialog .country-search{font-size:16px}}
+
+@media(max-width:680px){.position-header>div:first-child{min-width:0;flex:1}.position-header h2{font-size:24px;letter-spacing:-.7px;overflow-wrap:anywhere}.position-header p{max-width:100%}.position-current{min-width:0;flex:0 0 90px;max-width:90px;flex-wrap:wrap;justify-content:flex-end}.position-current>div{max-width:100%;min-width:0}.position-current b{font:800 16px/1.2 var(--font-ui);overflow-wrap:anywhere}}
+.welcome-title{font-size:clamp(54px,7vw,86px);line-height:.88}
+@media(max-width:680px){.welcome-title{font-size:clamp(44px,13.8vw,54px);letter-spacing:-1.7px}}
+@media(max-height:550px) and (min-width:681px){.welcome-title{font-size:42px}}
+/* Keep compact player and club names readable; wide lettering belongs on the main headings. */
+.club-card h3{font:800 clamp(18px,1.9vw,24px)/1.15 var(--font-ui);letter-spacing:-.45px}
+.team-picker-heading h2{font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-1px}
+.coach-read h3{font-family:var(--font-ui);font-weight:800;font-size:21px;letter-spacing:-.6px}
+.coach-card .team h2{font-family:var(--font-ui);font-size:22px;min-width:0;overflow-wrap:anywhere}
+.receiver-choice b{font-family:var(--font-ui);font-size:18px;letter-spacing:-.4px}
+.match-heading h1{font-size:clamp(27px,3vw,38px);line-height:1.12}
+@media(max-width:680px){.team-picker-heading h2{font-size:28px}.club-card h3{font-size:18px}}

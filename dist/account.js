@@ -37,11 +37,11 @@
   $('profileStatus').classList.toggle('ranked',Boolean(profile&&session));
  }
  function show(next=mode){
-  mode=next;message('');countryFilters.profileCountry();countryFilters.guestCountry();
+  mode=next;message('');countryFilters.profileCountry();countryFilters.guestCountry();$('guestCountryPanel').hidden=true;$('guestLogin').setAttribute('aria-expanded','false');
   const isProfile=mode==='profile',isRecovery=mode==='recovery';
   $('accountWelcome').hidden=isProfile||isRecovery;$('accountProfile').hidden=!isProfile;$('recoveryForm').hidden=!isRecovery;
-  $('accountTitle').textContent=isProfile?'Your place in the league.':isRecovery?'Back in the game.':'Build your legacy.';
-  $('accountSubtitle').textContent=isProfile?'Represent your country. Make every match count.':isRecovery?'Choose a new password for your account.':'Choose an account, or jump straight into guest play.';
+  $('accountTitle').textContent=isProfile?'Your place in the league.':isRecovery?'Back in the game.':'Your game. Your call.';
+  $('accountSubtitle').textContent=isProfile?'Represent your country. Make every match count.':isRecovery?'Choose a new password for your account.':'Jump in as a guest, or save your football legacy with a free account.';
   $('authSubmit').textContent=mode==='signup'?'CREATE ACCOUNT →':'SIGN IN →';
   $('authPassword').autocomplete=mode==='signup'?'new-password':'current-password';$('authPassword').minLength=mode==='signup'?8:1;
   $('signupTab').setAttribute('aria-pressed',String(mode==='signup'));$('loginTab').setAttribute('aria-pressed',String(mode==='login'));
@@ -70,9 +70,13 @@
  }
  $('accountNav').onclick=()=>show(session?'profile':'login');$('accountClose').onclick=()=>dialog.close();dialog.addEventListener('cancel',e=>{if(!chosen)e.preventDefault()});
  $('loginTab').onclick=()=>show('login');$('signupTab').onclick=()=>show('signup');
- $('guestLogin').onclick=()=>action(chooseGuest);
+ $('guestLogin').onclick=()=>{
+  if($('guestCountry').value)return action(chooseGuest);
+  $('guestCountryPanel').hidden=false;$('guestLogin').setAttribute('aria-expanded','true');$('guestCountrySearch').focus();
+ };
+ $('guestContinue').onclick=()=>action(chooseGuest);
  $('authForm').onsubmit=e=>{e.preventDefault();action(async()=>{
-  if(!client)throw Error('Account sign-in is being connected. Guest play is available below.');
+  if(!client)throw Error('Account sign-in is being connected. Guest play is available above.');
   const email=$('authEmail').value.trim(),password=$('authPassword').value;
   if(mode==='signup'){
    const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:redirectTo}});if(error)throw error;$('authPassword').value='';

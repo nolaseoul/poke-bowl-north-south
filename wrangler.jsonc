@@ -46,6 +46,6 @@
   "vars": {
     "SUPABASE_URL": "https://urkxyzvczwsmznudrqjz.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_QyQlOdWJs3CeQJB1pakxhA_X0M4B3bp",
-    "GOOGLE_ENABLED": "true"
+    "GOOGLE_ENABLED": "false"
   }
 }

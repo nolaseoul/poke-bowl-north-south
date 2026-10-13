@@ -25,7 +25,7 @@ header{border-color:#304c70}.ball{color:var(--poke-red)}.brand>span:not(.ball){c
 .league-dialog input,.league-dialog select{background:#0c1b30;color:#f1f5ff;border:1px solid #45688e}
 .league-dialog input:focus,.league-dialog select:focus{border-color:#68c8ff}
 .league-dialog .country-search{margin-bottom:6px;font-size:12px;padding:10px 12px}
-.country-results{display:block;font:400 10px/1.5 'DM Sans',sans-serif;color:#a8d8ff;letter-spacing:0;text-transform:none}
+.country-results{display:block;font:400 10px/1.5 var(--font-ui);color:#a8d8ff;letter-spacing:0;text-transform:none}
 .country-results:empty{display:none}.country-results:not(:empty){margin:0 0 6px}
 .auth-tabs button[aria-pressed=true]{background:#254b85;color:#ffe16b}.google-login{border-color:#7295c9;background:#eef4ff;color:#172b52}
 .google-login b{color:#377fe8}.guest-section{border-color:#4b71a1}.guest-section button{background:#243d6b;color:#a9e5ff;border-color:#547fad}
