@@ -40,7 +40,7 @@
     const slot=slots[selected],current=draft.ids[selected]===null?null:player(draft.ids[selected],slot.pos);
     $('slotEyebrow').textContent=`SCOUTING ${slot.label} · ${slot.side.toUpperCase()}`;
     $('positionTitle').textContent=titles[slot.pos];$('positionHint').textContent=hints[slot.pos];
-    $('currentPick').innerHTML=current?`<img src="assets/portraits/${current.id}.png" alt=""><div><small>YOUR STARTER</small><b>${current.name}</b><span>${current.ovr} OVR <button id="removePick" aria-label="Remove ${current.name} from ${slot.label}">Remove</button></span></div>`:'<span class="open-spot">OPEN POSITION<br><b>Make your pick ↓</b></span>';
+    $('currentPick').innerHTML=current?`<img src="assets/portraits/${current.id}.png" alt=""><div class="${current.custom?'original-starter':''}"><small>YOUR STARTER</small><b>${current.name}</b><span>${current.ovr} OVR <button id="removePick" aria-label="Remove ${current.name} from ${slot.label}">Remove</button></span></div>`:'<span class="open-spot">OPEN POSITION<br><b>Make your pick ↓</b></span>';
     if(current)$('removePick').onclick=()=>{draft.remove(selected);undoClear=null;save();render();announce(`${slot.label} is open. Choose a new starter.`)};
     const query=$('draftSearch').value.trim().toLowerCase().replace(/^#/,'');
     const type=$('draftType').value,sort=$('draftSort').value;
