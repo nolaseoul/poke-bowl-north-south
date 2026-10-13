@@ -148,3 +148,15 @@ OAuth callback errors are shown in the account dialog. Password-recovery mode
 is preserved when an initial session restoration completes concurrently. Client
 tests cover provider flows with a mock; real sign-in remains unverified until
 the provider setup above is completed.
+
+## Google provider checkpoint — October 12, 2026
+
+The owner created the Google OAuth web client and saved its ID and secret in
+Supabase. The public Auth settings report Google enabled. Cloudflare now serves
+`GOOGLE_ENABLED="true"`, and the live game displays an enabled Continue with
+Google button. No client secret is stored in this repository.
+
+The browser test reached Supabase’s authorize endpoint but Chrome blocked that
+navigation with `ERR_BLOCKED_BY_CLIENT`. A complete Google consent, callback,
+session restoration and ranked-save test remains unverified. This checkpoint
+supersedes earlier notes that Google credentials or button activation are pending.
