@@ -5,13 +5,15 @@ const RATE=32000,TAU=Math.PI*2;
 const cadence=Object.freeze(['ready','set','hut','hike']);
 const announcements=Object.freeze(['touchdown','good','twoPoint','noGood','coinToss','heads','tails']);
 const voiceClips=Object.freeze([...cadence,...announcements]);
-const durations={touchdown:1,good:.75,twoPoint:.9,noGood:.7,coinToss:1,heads:.5,tails:.5,ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.72,charge:.3};
+const durations={battleStart:.55,battleKO:.65,touchdown:1,good:.75,twoPoint:.9,noGood:.7,coinToss:1,heads:.5,tails:.5,ready:.196,set:.181,hut:.168,hike:.318,snap:.12,throw:.23,catch:.16,hit:.28,kick:.24,cheer:.85,whistle:.32,ultimate:.72,charge:.3};
 function effect(kind,rate=RATE){
  const duration=durations[kind];if(!duration)return new Float32Array(0);
  const out=new Float32Array(Math.ceil(duration*rate));let seed=719,phase=0,low=0;
  for(let i=0;i<out.length;i++){
   const t=i/rate,u=t/duration;seed=(Math.imul(seed,1664525)+1013904223)>>>0;const noise=seed/2147483648-1;low+=.12*(noise-low);let v=0;
-  if(kind==='hit'){phase+=TAU*(48+115*Math.exp(-t*36))/rate;v=Math.sin(phase)*Math.exp(-t*19)*.85+noise*Math.exp(-t*65)*.5+low*Math.exp(-t*14)*.45;}
+  if(kind==='battleStart'){const note=[220,330,440,660][Math.min(3,Math.floor(u*4))];phase+=TAU*note/rate;v=(Math.sin(phase)+Math.sin(phase*2)*.35)*Math.sin(Math.PI*u)*.4;}
+  else if(kind==='battleKO'){phase+=TAU*(140*Math.exp(-t*7)+28)/rate;v=Math.sin(phase)*Math.exp(-t*8)*.8+low*Math.exp(-t*5)*.8+(noise-low)*Math.exp(-t*16)*.45;}
+  else if(kind==='hit'){phase+=TAU*(48+115*Math.exp(-t*36))/rate;v=Math.sin(phase)*Math.exp(-t*19)*.85+noise*Math.exp(-t*65)*.5+low*Math.exp(-t*14)*.45;}
   else if(kind==='charge'){phase+=TAU*(180+u*u*1100)/rate;v=(Math.sin(phase)*.5+noise*.15)*u;}
   else if(kind==='ultimate'){const note=[440,660,880,1320][Math.min(3,Math.floor(u*4))];phase+=TAU*note/rate;v=(Math.sin(phase)*.6+Math.sin(phase*2)*.2)*Math.sin(Math.PI*u)**.7;}
   else if(kind==='catch')v=(noise-low)*Math.exp(-t*75)*.75+Math.sin(TAU*210*t)*Math.exp(-t*40)*.55;

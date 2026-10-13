@@ -23,6 +23,7 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - Every prospect has athletic ratings and different football skills and overall ratings for each position. Search by name or Pokédex number, filter by type, and compare position fit, speed, or strength.
 - Scout both teams, replace individual starters, and undo a cleared lineup.
 - Every one of the 151 Pokémon has one fixed signature ultimate, visible while drafting and scouting. The simulation triggers relevant players’ moves automatically on both teams, adding +12 to their position skills for that play (capped at 99). Each Pokémon can use its ultimate once per set of downs. A first down, change of possession, or halftime kickoff recharges both teams. Ordinary downs and other quarter changes preserve spent charges. Expand **YOUR ULTIMATES** to see readiness; live move callouts, elemental effects and a power-up sound announce activations.
+- Once per quarter, a random **Rival Rumble** cuts to a top-down isometric arena for 6.4 seconds. Two opposing Pokémon trade hits and signature ultimates with visible health bars, then the loser bursts into stylized blood-red pixels, sprite shards and smoke. Football resumes automatically; **Skip battle** returns early. The cutaway does not change the lineup, score, clock, stats or ultimate charges. Pause and reduced effects work in the arena; friend clients agree on fighters and winner.
 - WR1 stays fixed while WR2 and the third receiving slot rotate each snap through WR2–WR5. Two reserve WRs join automatically from unused prospects; the pass-target panel shows who is active or resting. Draft/share links still contain your starting 22. See [rotation and special-team rules](docs/football-flow.md).
 - Live box scores track passing, rushing, receiving, defense, blocking, kick/punt returns and return TDs, and ultimate uses (ULT).
 - Successful defensive counters show the defender charging the QB, firing their elemental signature, and knocking the QB down, with synchronized ultimate/impact sounds. A counter callout and a 1.25-second real-time hold keep the hit visible at 4×; highlight replays follow.
@@ -66,6 +67,7 @@ node tests/football.cjs
 node tests/stadium-upgrade.cjs
 node tests/stadium.cjs
 node tests/dances.cjs
+node tests/battle.cjs
 node tests/fx.cjs
 node tests/sprites.cjs
 node tests/presentation.cjs

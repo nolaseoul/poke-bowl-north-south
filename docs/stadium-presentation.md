@@ -11,3 +11,27 @@ Ultimate choreography uses the same server-resolved event and charge accounting.
 Friday Night Voltage is the new default original 130 BPM, 4/4 football arrangement, built from 16-bit PCM instruments. Sustained brass hooks, low bass, wide power chords, a marching snare cadence, tom fills and larger choruses replace the old default's high sixteenth-note lead. The two earlier tracks remain selectable, and audio mute/volume preferences persist. No audio from the reference site or Pokémon games is bundled.
 
 Checks cover all 151 portraits, every elemental path on both teams, native atlas direction conversion, real-time ultimate readability at 4x, the account prompt after title entry, all three music arrangements and complete CPU/PvP game lifecycles.
+
+## Quarter rumbles
+
+`battle.js` schedules one cutaway per quarter at a roster-derived clock window,
+after the completed football play, scoring celebration and any highlight. Its
+separate seeded timeline lasts 6.4 real seconds at all broadcast speeds. Two
+random opposing roster members trade six strikes, ending with two signature
+ultimates and a zero-health pixel KO. The isometric diamond arena uses the
+existing eight-direction artwork, plus red pixel splatter, sprite-colored
+fragments, impact rings and smoke. `battle.css` supplies responsive health
+bars, attack captions and an accessible Skip battle button.
+
+The cutaway never calls the simulation RNG or changes football state. Ranked
+call histories and old/new rules versions remain intact. PvP uses canonical
+seat order when hashing the trigger, fighters and winner, then maps back into
+each client's view. Rejoining a room skips already elapsed quarter windows.
+Pause freezes the timeline; reduced effects retain health, attacks and the KO
+without camera shake, movement, flying particles or smoke. First-down and
+ultimate recharge rules continue exactly where the football play left them.
+
+`tests/battle.cjs` verifies four varied rumbles across 50 full games, perspective
+rotation, monotone health/KO, cue boundaries and finite rendering. The browser
+loop test checks 48 actual rumbles at 4×, their real-time duration, pause and
+unchanged scores, stats, plays and ranked histories during each cutaway.

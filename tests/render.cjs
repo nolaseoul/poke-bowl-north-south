@@ -5,6 +5,7 @@ const vm=require('node:vm');
 const PokeSim=require('../dist/sim.js');
 const PokeDraft=require('../dist/draft.js');
 const PokeMotion=require('../dist/motion.js');
+const PokeBattle=require('../dist/battle.js');
 const PokeStadium=require('../dist/stadium.js');
 const {cuesBetween}=require('../dist/fx.js');
 const heard=new Set();
@@ -23,9 +24,9 @@ for(let seed=1;seed<=12;seed++){
   const math=Object.create(Math);math.random=random;
   class ChipMusic{constructor(){this.volume=.35;this.track='route';this.enabled=false}setVolume(v){this.volume=v}setTrack(v){this.track=v}play(){this.enabled=true;return Promise.resolve()}stop(){this.enabled=false}celebrate(kind){musicCalls.push(kind)}}
   class FieldFX{preload(){}setEnabled(v){this.enabled=v}prepare(){return Promise.resolve()}stop(){}announce(kind){voiceCalls.push(kind);this.play(kind)}play(kind){if(this.enabled)heard.add(kind)}}
-  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeStadium,PokeTeamName:require('../dist/team-name.js'),PokePvP:require('../dist/pvp-client.js'),PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
+  const sandbox={PokeFX:{FieldFX,cuesBetween},document,window:{matchMedia:()=>({matches:false}),addEventListener(){}},Image:class{constructor(){this.complete=true;this.naturalWidth=96}},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:callback=>{nextFrame=callback},Math:math,PokeSim,PokeDraft,PokeMotion,PokeBattle,PokeStadium,PokeTeamName:require('../dist/team-name.js'),PokePvP:require('../dist/pvp-client.js'),PokeDances:require('../dist/dances.js'),PokeMusic:{ChipMusic,tracks:{route:{name:'Route'}}}};
   vm.createContext(sandbox);
-  sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
+  sandbox.window.PokeBattle=PokeBattle;sandbox.window.Image=sandbox.Image;sandbox.window.PokeMotion=PokeMotion;sandbox.window.PokeDances=sandbox.PokeDances;
   for(const file of ['sprite-data','sprites','stadium'])vm.runInContext(fs.readFileSync(require.resolve('../dist/'+file+'.js'),'utf8'),sandbox);
   sandbox.PokeStadium=sandbox.window.PokeStadium;
   vm.runInContext(fs.readFileSync(require.resolve('../dist/game.js'),'utf8'),sandbox);
@@ -41,6 +42,7 @@ for(let seed=1;seed<=12;seed++){
   assert.equal(vm.runInContext('match.plays',sandbox),0,'Waiting for a call must not consume a down');
   element('pause').onclick();element('callPlay').onclick();assert.equal(vm.runInContext('match.plays',sandbox),0,'Paused coach mode must not snap');element('pause').onclick();
   if(seed%2===0)element('autoMode').onclick();
+  let battleFrames=0,battleCount=0,wasBattle=false,battleSnapshot=null;
   let frames=0,wasReplay=false,wasCelebrating=false,hold=0,wasCounter=false,counterFrames=0;
   while(vm.runInContext('running',sandbox)&&frames<12000){
     if(seed%2===1&&vm.runInContext('waiting&&!!footballMode&&match.actor()===0',sandbox)){vm.runInContext(`submitFootball(match.phase==='coinToss'?{type:'toss',choice:'heads'}:match.phase==='receive'?{type:'receive',choice:'receive'}:match.phase==='conversion'?{type:'conversion',choice:match.plays%2?'pat':'two'}:match.phase==='pat'?{type:'pat',accuracy:.5}:{type:'kickoff',power:.9})`,sandbox)}
@@ -58,6 +60,14 @@ for(let seed=1;seed<=12;seed++){
     const callback=nextFrame;nextFrame=null;
     callback(++frames*60);
     if(beforePower&&!vm.runInContext('replaying||waiting||!!celebration||counterHold>0',sandbox)){const delta=vm.runInContext('phase',sandbox)-beforePhase;if(delta>=0){assert.ok(delta<=.060001,'Ultimate action must remain readable at 4x');powerFrames++;}}
+    const inBattle=vm.runInContext('!!battleMoment',sandbox);
+    if(inBattle){
+     if(!wasBattle){battleCount++;battleFrames=0;battleSnapshot=vm.runInContext('JSON.stringify([match.score,match.stats,match.plays,match.clock,rankedCalls])',sandbox);assert.equal(element('battleHud').hidden,false);
+      vm.runInContext('togglePause();update(.5)',sandbox);assert.equal(vm.runInContext('battleMoment.elapsed',sandbox),0,'Pause must freeze the arena timeline');vm.runInContext('togglePause()',sandbox);
+     }
+     battleFrames++;assert.equal(vm.runInContext('JSON.stringify([match.score,match.stats,match.plays,match.clock,rankedCalls])',sandbox),battleSnapshot,'The arena cannot consume football plays, clock, RNG or match stats');
+    }
+    if(!inBattle&&wasBattle){assert.ok(battleFrames>=106,'A rumble lasts 6.4 real seconds at 4x');assert.equal(element('battleHud').hidden,true)}wasBattle=inBattle;
     const counter=vm.runInContext('counterHold>0',sandbox);
     if(counter){counterFrames++;if(!wasCounter)counterCount++;assert.match(element('actionCall').textContent,/COUNTER! −[5-9]|COUNTER! −10/);assert.equal(element('ultimateCall').hidden,false);}
     if(!counter&&wasCounter){assert.ok(counterFrames>=21,'Counter hit gets a real-time hold at 4×');counterFrames=0;}
@@ -70,11 +80,13 @@ for(let seed=1;seed<=12;seed++){
     if(replay&&!wasReplay)replayCount++;
     wasReplay=replay;
   }
-  assert.ok(frames<12000,'The browser animation loop must finish the game');
+  assert.ok(frames<12000,'The browser animation loop must finish the game');assert.equal(battleCount,4,'Exactly one random arena battle per quarter');
   assert.equal(vm.runInContext('match.over',sandbox),true);
   assert.match(element('banner').innerHTML,/FINAL WHISTLE/);
   assert.equal(typeof element('again').onclick,'function');
   if(seed===1){
+   vm.runInContext(`clearMoment();resetQuarterBattles();match=new Match(()=>.5,{teams:squads,footballFlow:true,stadiumRules:true});match.phase='scrimmage';match.clock=60;running=true;coaching=true;paused=false;event=match.next('quick','deep');formation();pendingBattle=PokeBattle.create(event,match.teams);startQuarterBattle();`,sandbox);
+   const beforeSkip=vm.runInContext('JSON.stringify([match.score,match.stats,match.plays,match.clock,rankedCalls])',sandbox);element('battleSkip').onclick();assert.equal(vm.runInContext('battleMoment',sandbox),null);assert.equal(element('battleHud').hidden,true);assert.equal(vm.runInContext('waiting',sandbox),true);assert.equal(vm.runInContext('JSON.stringify([match.score,match.stats,match.plays,match.clock,rankedCalls])',sandbox),beforeSkip);assert.equal(vm.runInContext('battleQuarters.has(1)',sandbox),true,'Skipping cannot reroll another rumble in the same quarter');
    vm.runInContext(`clearMoment();match=new Match(()=>.5,{teams:squads,footballFlow:true});match.phase='pat';match.score=[6,0];match.team=0;match.ball=85;running=true;coaching=true;paused=false;event=null;showFootballStep();speed=1;update(.2);`,sandbox);
    const meter1=element('meterNeedle').style.top;assert.notEqual(meter1,'0%');assert.equal(element('meterNeedle').style.left,'-10px','PAT arrow moves vertically');
    element('pause').onclick();const plays=vm.runInContext('match.plays',sandbox);vm.runInContext('update(.5)',sandbox);element('meterStop').onclick();assert.equal(vm.runInContext('match.plays',sandbox),plays);assert.equal(element('meterNeedle').style.top,meter1,'Pause freezes the meter and rejects kicks');

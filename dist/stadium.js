@@ -2,6 +2,7 @@
 (function(root){
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const dances=typeof module!=='undefined'?require('./dances.js'):root.PokeDances;
+const battles=typeof module!=='undefined'?require('./battle.js'):root.PokeBattle;
 function project(lane,yard,camera=30,team=0){const v=(lane-54)/532;return{x:560+(team===0?1:-1)*(yard-camera)*16+(v-.5)*74,y:273+v*310};}
 // Keep the line, both units and the scoring end zone in view, in either direction.
 function goalpostSize(extraPoint=false){return extraPoint?{halfWidth:78,stem:48,crossbar:88,height:210,line:7}:{halfWidth:27,stem:30,crossbar:28,height:61,line:4}}
@@ -97,7 +98,7 @@ class Stadium{
  draw(s){
   const ctx=this.ctx,{frame,motion,event,phase,elapsed,camera,fullEffects,shake,particles,replaying,paused,waiting,selectedPlay,selectedDefense,squads}=s;
   if(!frame)return;this.sprites?.preload(frame.players.map(player=>player.p));const team=event?.team??0,P=(x,y)=>project(x,y,camera,team),line=(a,b,color,width=1)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()},quad=(yard1,yard2,color)=>{let a=P(54,yard1),b=P(586,yard1),c=P(586,yard2),d=P(54,yard2);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill()};
-  ctx.setTransform(this.scale,0,0,this.scale,0,0);ctx.clearRect(0,0,1120,640);ctx.save();if(fullEffects&&shake>.1)ctx.translate(Math.sin(elapsed*103)*shake,Math.cos(elapsed*81)*shake*.6);
+  ctx.setTransform(this.scale,0,0,this.scale,0,0);ctx.clearRect(0,0,1120,640);if(s.battle&&battles){battles.draw(ctx,s.battle,this.sprites,this.images,fullEffects);if(paused){ctx.fillStyle='#091323aa';ctx.fillRect(0,0,1120,640);ctx.fillStyle='#ffdf61';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.fillText('RUMBLE PAUSED',560,335)}return}ctx.save();if(fullEffects&&shake>.1)ctx.translate(Math.sin(elapsed*103)*shake,Math.cos(elapsed*81)*shake*.6);
   this.atmosphere(s);
   ctx.fillStyle='#477d50';ctx.fillRect(0,273,1120,310);
   for(let y=-10;y<110;y+=5)quad(y,y+5,(y/5)%2?'#477e4b':'#528b50');
