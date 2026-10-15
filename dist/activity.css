@@ -1,0 +1,10 @@
+.stadium-totals{width:min(100%,430px);margin:0 auto 16px;text-align:center;color:#dce9ec;font-family:var(--font-ui),sans-serif}
+.stadium-totals dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;padding:11px 8px;background:#0b1b2b9e;border:1px solid #b4d9e81f;border-radius:9px;box-shadow:inset 0 1px 0 #ffffff06}
+.stadium-totals dl>div{display:flex;flex-direction:column;gap:4px;min-width:0;padding:0 8px}
+.stadium-totals dl>div+div{border-left:1px solid #b4d9e821}
+.stadium-totals dt{order:2;font-size:8px;font-weight:600;letter-spacing:.7px;white-space:nowrap;color:#9ab5c3}
+.stadium-totals dd{margin:0;font-size:22px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums;letter-spacing:-.6px;color:#f5df91}
+.stadium-totals dl>div:nth-child(2) dd{color:#98ddec}.stadium-totals dl>div:nth-child(3) dd{color:#eea5ae}
+.stadium-totals [data-totals-note]{margin:7px 0 0!important;color:#7d9ba9!important;font-size:7px!important;letter-spacing:1px!important;line-height:1.4!important}
+.stadium-totals.in-game{margin:12px auto 0}.stadium-totals.in-game dl{padding:8px}.stadium-totals.in-game dd{font-size:19px}
+@media(max-width:600px){.stadium-totals{max-width:340px;margin-bottom:18px}.stadium-totals dl{padding:10px 4px}.stadium-totals dl>div{padding:0 5px}.stadium-totals dd{font-size:21px}.stadium-totals dt{font-size:7px;letter-spacing:.3px}}

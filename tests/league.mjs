@@ -1,23 +1,11 @@
 import assert from 'node:assert/strict';
-import {DatabaseSync} from 'node:sqlite';
-import {readFileSync} from 'node:fs';
+import {database} from './support/d1.mjs';
+import {totalsFor} from '../worker/activity.mjs';
 import {createHandler} from '../worker/index.mjs';
 import rules from '../dist/league.js';
 import draft from '../dist/draft.js';
 import sim from '../dist/sim.js';
-const sql=new DatabaseSync(':memory:');sql.exec(readFileSync(new URL('../migrations/0001_league.sql',import.meta.url),'utf8'));
-sql.exec(readFileSync(new URL('../migrations/0002_match_opponents.sql',import.meta.url),'utf8'));
-const db={
- prepare(query){
-  return {bind(...args){
-   return {
-    async first(){return sql.prepare(query).get(...args)||null},
-    async all(){return {results:sql.prepare(query).all(...args)}},
-    async run(){return sql.prepare(query).run(...args)}
-   };
-  }};
- }
-};
+const {db,sql}=database();
 const env={LEAGUE:db,SUPABASE_URL:'https://auth.example.test',SUPABASE_PUBLISHABLE_KEY:'public-test-key',GOOGLE_ENABLED:'true',ASSETS:{fetch:()=>new Response('assets')}};
 const handler=createHandler(async(url,{headers})=>{assert.equal(url,env.SUPABASE_URL+'/auth/v1/user');assert.equal(headers.apikey,'public-test-key');const token=headers.Authorization.slice(7);if(token==='expired')return Response.json({error:'expired'},{status:401});return Response.json({id:token==='second'?'user-two':'user-one',is_anonymous:token==='guest'})});
 async function request(path,method='GET',data,token='first',extra={}){const headers={'Content-Type':'application/json',...extra};if(token)headers.Authorization='Bearer '+token;const r=await handler(new Request('https://bowl.test/api/'+path,{method,headers,...(data===undefined?{}:{body:JSON.stringify(data)})}),env);return{status:r.status,data:await r.json(),headers:r.headers}}
@@ -75,4 +63,5 @@ const robotGame=new sim.Match(rules.random(robotTicket.seed),{teams:rules.teams(
 while(!robotGame.over){if(robotGame.actor()!==null){robotCalls.push(null);robotGame.next()}else if(robotGame.team===0){robotCalls.push({offense:'quick',target:1001});robotGame.next('quick',null,1001)}else{robotCalls.push({defense:'deep'});robotGame.next(null,'deep')}}
 assert.equal((await request('matches/'+robotTicket.id+'/finish','POST',{calls:robotCalls,score:robotGame.score})).status,200,'Romantium games save through the real ranked API');
 const unconfigured=await handler(new Request('https://bowl.test/api/profile'),{...env,SUPABASE_URL:''});assert.equal(unconfigured.status,503);
+const globalTotals=sql.prepare('SELECT * FROM stadium_totals').get();assert.equal(globalTotals.games,sql.prepare('SELECT count(*) AS n FROM matches WHERE completed_at IS NOT NULL').get().n);const robotTotals=sql.prepare('SELECT * FROM stadium_games WHERE id=?').get('ranked:'+robotTicket.id);assert.equal(robotTotals.touchdowns,totalsFor(robotGame).touchdowns);assert.equal(robotTotals.tackles,totalsFor(robotGame).tackles);
 console.log('PASS: 50 deterministic ranked games and eight persisted gym matchups, session verification, guest exclusion, account isolation, country profiles, persistent SQL standings, forged score rejection, completed-only saving and idempotent retries.');sql.close();

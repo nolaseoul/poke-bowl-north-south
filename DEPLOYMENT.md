@@ -15,6 +15,9 @@ Private PvP rooms: SQLite Durable Object `PvPRoom`, binding `PVP` (12-hour expir
 D1 database: `poke-bowl-league`, binding `LEAGUE`.
 The browser game is in `dist/`; the API is in `worker/index.mjs`.
 No login is required to play as a guest. Guest results are not saved.
+Anonymous global game/TD/tackle counts use migration `0003_stadium_totals.sql`.
+Apply this migration before deploying the counter API. It adds separate tables
+and does not alter profile records, standings, existing matches or Auth settings.
 
 ## Local preview
 

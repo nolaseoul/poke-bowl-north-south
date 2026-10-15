@@ -2,6 +2,7 @@ import sim from '../dist/sim.js';
 import draft from '../dist/draft.js';
 import league from '../dist/league.js';
 import naming from '../dist/team-name.js';
+import {contribution} from './activity.mjs';
 const fail=(text,status=400)=>{throw Object.assign(Error(text),{status})};
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 const ttl=12*60*60*1000;
@@ -13,13 +14,13 @@ export function rebuild(room,after=0){
 }
 // One serialized, durable room owns both coaches' hidden calls and the authoritative result.
 export class PvPRoom{
- constructor(state){this.state=state}
+ constructor(state,env={}){this.state=state;this.env=env}
  async alarm(){await this.state.storage.deleteAll()}
  fetch(request){return this.state.blockConcurrencyWhile(async()=>{
   try{
    const url=new URL(request.url),method=request.method,token=request.headers.get('X-Room-Token');let room=await this.state.storage.get('room');
    if(url.pathname==='/create'&&method==='POST'){
-    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,handVersion:2,rulesVersion:[3,4].includes(data.rulesVersion)?data.rulesVersion:1,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
+    if(room)fail('This invitation already exists.',409);const data=await request.json();room={id:data.id,coaches:[coach(data),null],seed:crypto.getRandomValues(new Uint32Array(1))[0],revision:0,handVersion:2,statisticsVersion:1,rulesVersion:[3,4].includes(data.rulesVersion)?data.rulesVersion:1,calls:[],pending:[null,null],expires:Date.now()+ttl};await this.state.storage.put('room',room);await this.state.storage.setAlarm(room.expires);return json({id:room.id,token:room.coaches[0].token},201);
    }
    if(!room)fail('Invitation not found or expired.',404);if(Date.now()>room.expires)fail('This invitation expired. Create a new one.',410);
    let seat=room.coaches.findIndex(c=>c&&c.token===token);
@@ -55,6 +56,9 @@ export class PvPRoom{
     }
     await this.state.storage.put('room',room);
    }else if(method!=='GET')fail('Not found.',404);
+   if(match.over&&room.statisticsVersion===1&&!room.totalled&&this.env.LEAGUE){
+    try{await contribution(this.env.LEAGUE,'friend:'+room.id,'friend',match).run();room.totalled=true;await this.state.storage.put('room',room)}catch{console.warn('Stadium totals will retry on the next room visit.')}
+   }
    return json({id:room.id,seat,state:match.over?'finished':'playing',names:match.names,lineups:room.coaches.map(c=>c.lineup),round:room.calls.length,revision:room.revision,locked:room.pending.map(Boolean),snapshot:snapshot(match),hand:room.handVersion===2&&(!match.footballFlow||match.actor()===null)?league.hand(room.seed,room.calls.length,seat!==match.team):null,events,expires:room.expires});
   }catch(error){if(!error.status)console.error('Duel request failed',error.name);return json({error:error.status?error.message:'Could not connect to the duel. Try again.'},error.status||500)}
  })}

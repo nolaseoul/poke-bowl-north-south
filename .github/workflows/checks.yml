@@ -57,6 +57,8 @@ jobs:
         run: node tests/presentation.cjs
       - name: Validate account flows and guest exclusion
         run: node tests/account.cjs
+      - name: Validate public lifetime activity counters
+        run: node tests/activity.mjs && node tests/activity-client.mjs
       - name: Validate server-verified results and persistent standings
         run: node tests/league.mjs
       - name: Validate team names and roster share links

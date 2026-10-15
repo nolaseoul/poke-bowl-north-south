@@ -17,6 +17,7 @@ Switch **AUTO** on to watch an uninterrupted four-quarter game with both teams c
 - Public [How to play](https://www.pokeball.gg/how-to-play), [gym teams](https://www.pokeball.gg/teams) and [player ratings](https://www.pokeball.gg/player-ratings) guides explain the real rules, rosters and position projections. Rebuild them with `node scripts/build-guides.cjs` after game data changes.
 - Google Search Console uses the verified `pokeball.gg` Domain property. Public pages include search titles, descriptions, canonicals and a sitemap; see [search setup and maintenance](docs/search.md).
 - Basic visits and page views are tracked with Cloudflare Web Analytics. The private dashboard includes countries, referrers, devices and page performance; see [analytics access and setup](docs/analytics.md).
+- A small **worldwide stadium counter** on the title and game screens shows completed games, touchdowns and **Pokémon crushed (football tackles)**. Both teams contribute across guest, ranked and friend games. Counts are verified server-side, persist in D1, and start with the counter release; earlier games are excluded. Replays, retries and the second friend’s browser never count a match twice. Guest contributions are anonymous and do not create profile records.
 - Game, roster and friend-invite links include a dedicated pixel-art stadium cover with Open Graph and X large-image metadata. See [share preview and artwork notes](docs/share-preview.md).
 - Name your team on the draft screen (up to 24 characters). The name is remembered on this device and appears in the scoreboard, playbook, feed, score celebrations and final result. A rename applies at the next kickoff.
 - Share your complete starting 22 with **Share team**. Your friend can preview the name and explicitly load the roster before editing or playing. **Invite friend · 1v1** creates a private 12-hour duel link. Two coaches draft their teams, lock hidden offense/defense calls each down, then watch one server-resolved match. Guest-friendly duels are unranked; the invite restores your seat in the browser you joined with.
@@ -77,6 +78,8 @@ node tests/sprites.cjs
 node tests/presentation.cjs
 node tests/account.cjs
 node tests/league.mjs
+node tests/activity.mjs
+node tests/activity-client.mjs
 node tests/team-links.cjs
 node tests/blocking.cjs
 node tests/pvp.mjs

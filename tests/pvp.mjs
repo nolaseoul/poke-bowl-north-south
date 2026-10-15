@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import {database} from './support/d1.mjs';
+import {totalsFor} from '../worker/activity.mjs';
+const {db,sql}=database();
 import {PvPRoom,rebuild} from '../worker/pvp.mjs';
 import {createHandler} from '../worker/index.mjs';
 import Draft from '../dist/draft.js';
@@ -7,7 +10,7 @@ import League from '../dist/league.js';
 import PvP from '../dist/pvp-client.js';
 const rooms=new Map();
 function makeState(){let queue=Promise.resolve();const values=new Map();return{storage:{async get(k){return structuredClone(values.get(k))},async put(k,v){values.set(k,structuredClone(v))},async setAlarm(t){this.alarm=t},async deleteAll(){values.clear()}},blockConcurrencyWhile(fn){const next=queue.then(fn);queue=next.catch(()=>{});return next}}}
-const env={PVP:{idFromName:id=>id,get(id){if(!rooms.has(id)){const state=makeState();rooms.set(id,{state,object:new PvPRoom(state)})}return{fetch:r=>rooms.get(id).object.fetch(r)}}},ASSETS:{fetch:()=>new Response('assets')}};
+const env={LEAGUE:db,PVP:{idFromName:id=>id,get(id){if(!rooms.has(id)){const state=makeState();rooms.set(id,{state,object:new PvPRoom(state,env)})}return{fetch:r=>rooms.get(id).object.fetch(r)}}},ASSETS:{fetch:()=>new Response('assets')}};
 const handler=createHandler();
 function fetcher(url,options={}){return handler(new Request('https://bowl.test'+url,options),env)}
 const stores=[0,1,2].map(()=>{const m=new Map();return{getItem:k=>m.get(k)||'',setItem:(k,v)=>m.set(k,v)}});
@@ -16,7 +19,7 @@ const host=await PvP.RoomClient.create(ids,'Pika ⚡ FC',{fetch:fetcher,storage:
 let publicView=await (await fetcher('/api/rooms/'+host.id)).json();assert.equal(publicView.state,'waiting');assert.equal(publicView.token,undefined);assert.equal(publicView.seed,undefined);assert.equal(publicView.lineups,undefined);
 const visitor=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[1]});await visitor.join(opponent,'Eevee United');const intruder=new PvP.RoomClient(host.id,{fetch:fetcher,storage:stores[2]});await assert.rejects(intruder.join(ids,'Third wheel'),/Both coaches/);
 await assert.rejects(intruder.call(0,'quick'),/browser/);await assert.rejects(host.call(0,'nope'),/valid play/);
-const original=room.object;room.object=new PvPRoom(room.state);assert.equal((await host.poll()).names[1],'Eevee United','Object restart retains both coaches');assert.notEqual(room.object,original);
+const original=room.object;room.object=new PvPRoom(room.state,env);assert.equal((await host.poll()).names[1],'Eevee United','Object restart retains both coaches');assert.notEqual(room.object,original);
 let view=await host.poll(),rounds=0,sawCounter=false;
 while(view.state!=='finished'){
  const offense=view.snapshot.team,coaches=[host,visitor],offered=(await coaches[offense].poll()).hand,defOffered=(await coaches[1-offense].poll()).hand;
@@ -73,3 +76,6 @@ assert.ok(stages.has('kickoff')&&stages.has('conversion'));assert.ok(sawReserveT
 console.log(`PASS: ${fullRounds} version-4 PvP actions including toss, receive choice, kickoff meters, conversions, actor enforcement, both perspective rotations and durable replay.`);
 
 console.log(`PASS: two real coach clients, ${rounds} authoritative PvP downs through final whistle, private calls/tokens/seeds, idempotency, concurrency, third-player rejection, durability, refresh recovery, mirrored perspectives, expiry and full stat agreement.`);
+
+const counted=sql.prepare('SELECT * FROM stadium_games WHERE id=?').get('friend:'+full.id),expected=totalsFor(rebuild(fullStored).match);assert.equal(counted.touchdowns,expected.touchdowns);assert.equal(counted.tackles,expected.tackles);const priorTotals=sql.prepare('SELECT * FROM stadium_totals').get();await full.poll();await otherFull.poll();fullRoom.object=new PvPRoom(fullRoom.state,env);await full.poll();assert.deepEqual(sql.prepare('SELECT * FROM stadium_totals').get(),priorTotals,'Both coaches, reconnects and object restarts count a friend game once');assert.equal(priorTotals.games,sql.prepare('SELECT count(*) AS n FROM stadium_games').get().n);sql.close();
+console.log('PASS: friend games count once globally across both coaches, polling, durable restarts and retries.');

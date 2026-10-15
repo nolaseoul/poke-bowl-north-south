@@ -1,5 +1,6 @@
 import league from '../dist/league.js';
 import {routeRoom} from './pvp.mjs';
+import {contribution} from './activity.mjs';
 export {PvPRoom} from './pvp.mjs';
 const {countries,teams,replay}=league;
 const json=(data,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
@@ -34,6 +35,29 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
   if(path==='/api/config'&&method==='GET')return json({url:env.SUPABASE_URL||null,key:env.SUPABASE_PUBLISHABLE_KEY||null,google:env.GOOGLE_ENABLED==='true'});
   if(path==='/api/rooms'||path.startsWith('/api/rooms/'))return await routeRoom(request,env,body);
   if(!env.LEAGUE)fail('Leaderboard is temporarily unavailable.',503);
+  if(path==='/api/stats'&&method==='GET'){
+   const totals=await env.LEAGUE.prepare('SELECT games,touchdowns,tackles,since FROM stadium_totals WHERE id=1').bind().first();
+   return Response.json(totals,{headers:{'Cache-Control':'public, max-age=15','X-Content-Type-Options':'nosniff'}});
+  }
+  if(path==='/api/stats/games'&&method==='POST'){
+   const data=await body(request),seed=crypto.getRandomValues(new Uint32Array(1))[0],opponent=data.opponent??'random';teams(data.lineup,seed,opponent);
+   const id=crypto.randomUUID(),now=Date.now();
+   await env.LEAGUE.batch([
+    env.LEAGUE.prepare('DELETE FROM stadium_tickets WHERE expires<?').bind(now),
+    env.LEAGUE.prepare('INSERT INTO stadium_tickets(id,seed,lineup,opponent,expires) VALUES(?,?,?,?,?)').bind(id,seed,JSON.stringify(data.lineup),opponent,now+48*60*60*1000)
+   ]);
+   return json({id,seed,opponent,rulesVersion:4,anonymous:true},201);
+  }
+  const guestFinish=path.match(/^\/api\/stats\/games\/([a-f0-9-]{36})\/finish$/);
+  if(guestFinish&&method==='POST'){
+   const id='guest:'+guestFinish[1];
+   if(await env.LEAGUE.prepare('SELECT id FROM stadium_games WHERE id=?').bind(id).first())return json({counted:true});
+   const ticket=await env.LEAGUE.prepare('SELECT * FROM stadium_tickets WHERE id=? AND expires>=?').bind(guestFinish[1],Date.now()).first();if(!ticket)fail('Game ticket not found or expired.',404);
+   const data=await body(request),match=replay(JSON.parse(ticket.lineup),ticket.seed,data.calls,ticket.opponent,4);
+   if(!Array.isArray(data.score)||data.score.length!==2||data.score.some((n,i)=>n!==match.score[i]))fail('The match result could not be verified.');
+   await env.LEAGUE.batch([contribution(env.LEAGUE,id,'guest',match),env.LEAGUE.prepare('DELETE FROM stadium_tickets WHERE id=?').bind(ticket.id)]);
+   return json({counted:true});
+  }
   if(path==='/api/leaderboard'&&method==='GET'){
    const country=url.searchParams.get('country');if(country&&!countries.includes(country))fail('Choose a valid country.');
    const board=await env.LEAGUE.prepare(`SELECT * FROM (${ranked}) ${country?'WHERE country=?':''} ORDER BY rank LIMIT 100`).bind(...(country?[country]:[])).all();return json({players:board.results});
@@ -56,7 +80,10 @@ export function createHandler(fetcher=fetch){return async(request,env)=>{
    if(stored.completed_at)return json({saved:true,profile:await profile(env.LEAGUE,userId)});
    const data=await body(request),lineup=JSON.parse(stored.lineup),match=replay(Array.isArray(lineup)?lineup:lineup.ids,stored.seed,data.calls,stored.opponent,Array.isArray(lineup)?1:lineup.rulesVersion);
    if(!Array.isArray(data.score)||data.score.length!==2||data.score.some((n,i)=>n!==match.score[i]))fail('The match result could not be verified.');
-   await env.LEAGUE.prepare("UPDATE matches SET completed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),points_for=?,points_against=?,plays=? WHERE id=? AND user_id=? AND completed_at IS NULL").bind(...match.score,match.plays,stored.id,userId).run();return json({saved:true,profile:await profile(env.LEAGUE,userId)});
+   await env.LEAGUE.batch([
+    env.LEAGUE.prepare("UPDATE matches SET completed_at=strftime('%Y-%m-%dT%H:%M:%fZ','now'),points_for=?,points_against=?,plays=? WHERE id=? AND user_id=? AND completed_at IS NULL").bind(...match.score,match.plays,stored.id,userId),
+    contribution(env.LEAGUE,'ranked:'+stored.id,'ranked',match)
+   ]);return json({saved:true,profile:await profile(env.LEAGUE,userId)});
   }
   fail('Not found.',404);
  }catch(error){const validation=/Pokémon|history|Finish the match|valid opponent/.test(error.message);if(!error.status&&!validation)console.error('League request failed',error.name);return json({error:(error.status||validation)?error.message:'Could not complete that request. Please try again.'},error.status||(validation?400:500))}
